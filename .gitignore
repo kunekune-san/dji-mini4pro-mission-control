@@ -1,0 +1,35 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+
+# Kotlin
+.kotlin/
+
+# Local config
+local.properties
+
+# Keystore (sensitive)
+*.jks
+*.keystore
+
+# Claude Code local settings
+.claude/
+
+# Internal documentation
+CLAUDE.md
+PROJECT_STATUS.md
+PROJECT_BLUEPRINT.md
+BUGS.md
+DJI_Notes.md
+CODE_GUIDE.md
+MQTT_GUIDE.md
+dji_docs/
+
+# OS
+.DS_Store
+Thumbs.db

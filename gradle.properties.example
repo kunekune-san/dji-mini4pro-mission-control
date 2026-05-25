@@ -1,0 +1,14 @@
+# DJI API Key - 请至 https://developer.dji.com 注册申请
+AIRCRAFT_API_KEY = YOUR_API_KEY_HERE
+
+# Google Maps API Key（选填）
+GMAP_API_KEY = YOUR_GOOGLE_MAPS_KEY
+
+# MapLibre Token（选填）
+MAPLIBRE_TOKEN = YOUR_MAPLIBRE_TOKEN
+
+# 签章设定（debug build 使用 Android 预设 debug keystore，无需修改）
+STORE_FILE = ../msdkkeystore.jks
+STORE_PASSWORD = YOUR_STORE_PASSWORD
+KEY_ALIAS = msdkkeystore
+KEY_PASSWORD = YOUR_KEY_PASSWORD

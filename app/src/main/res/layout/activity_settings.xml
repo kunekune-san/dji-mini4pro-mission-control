@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- MQTT Broker Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MQTT Broker"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Broker Host"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. broker.emqx.io"
+            android:inputType="textUri"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Broker Port"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_port"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. 1883"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Topic Prefix (Drone ID)"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_topic_prefix"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. drone/YOUR_DRONE_ID"
+            android:inputType="text"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username (optional)"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Leave empty if no auth"
+            android:inputType="text"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Password (optional)"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Leave empty if no auth"
+            android:inputType="textPassword"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btn_save_mqtt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save MQTT Settings"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Flight Limits Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="飛行限制"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="限制高度（公尺，20–120）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_max_height"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="120"
+            android:inputType="numberDecimal"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="限制距離（公尺，15–8000）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_max_radius"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1000"
+            android:inputType="numberDecimal"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="返航高度（公尺，20–500）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_rth_height"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="30"
+            android:inputType="numberDecimal"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btn_save_flight_limits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="儲存飛行限制"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tv_flight_limits_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚠ 飛機未連線，設定將於連線後套用"
+            android:textColor="#FFCC00"
+            android:textSize="12sp"
+            android:layout_marginBottom="32dp"
+            android:visibility="gone" />
+
+        <!-- RC Stick Mode Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RC Stick Mode"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_rc_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/rb_mode_jp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JP (Japanese)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+
+            <RadioButton
+                android:id="@+id/rb_mode_usa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="USA (American)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+
+            <RadioButton
+                android:id="@+id/rb_mode_ch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CH (Chinese)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+        </RadioGroup>
+
+    </LinearLayout>
+</ScrollView>
