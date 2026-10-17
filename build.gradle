@@ -1,0 +1,52 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+apply from: rootProject.file('dependencies.gradle')
+
+// Load local.properties (signing passwords, etc.)
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    def localProperties = new Properties()
+    localProperties.load(localPropertiesFile.newDataInputStream())
+    localProperties.each { key, value ->
+        if (!project.hasProperty(key)) {
+            project.ext[key] = value
+        }
+    }
+}
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+        maven { url 'https://maven.fabric.io/public' }
+        maven { url 'https://plugins.gradle.org/m2/' }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KOTLIN_VERSION"
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.55'
+    }
+}
+
+
+allprojects {
+    repositories {
+        maven {
+            url REPO_MAVEN2
+        }
+        google()
+        jcenter()
+        mavenCentral()
+        maven {
+            url KOTLIN_MAVEN
+        }
+        maven { url JITPACK_MAVEN_URL }
+        repositories {
+            flatDir {
+                dirs new File(rootProject.projectDir.getAbsolutePath() + '/libs')
+            }
+        }
+    }
+}

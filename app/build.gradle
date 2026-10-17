@@ -1,0 +1,166 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
+
+android {
+    namespace "dji.sampleV5.aircraft"
+    compileSdkVersion Integer.parseInt(project.ANDROID_COMPILE_SDK_VERSION)
+
+    defaultConfig {
+        applicationId "com.example.n8ntest"
+        minSdkVersion Integer.parseInt(project.ANDROID_MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(project.ANDROID_TARGET_SDK_VERSION)
+        versionCode 1
+        versionName "1.0"
+        manifestPlaceholders["API_KEY"] = project.AIRCRAFT_API_KEY
+        manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
+        manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN
+        manifestPlaceholders["DJI_API_KEY"] = project.DJI_API_KEY
+        ndk {
+            //noinspection ChromeOsAbiSupport
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    //配置签名信息
+    // release 簽章使用 findProperty + 預設值防呆：沒有 local.properties（含 STORE_PASSWORD/KEY_PASSWORD）
+    // 時不會在 configuration 階段拋 MissingPropertyException，讓 debug build 可直接使用預設簽章。
+    // 若要建置 release，請自建 keystore 並在 local.properties 設定 STORE_FILE/STORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD。
+    signingConfigs {
+        release {
+            storeFile file(project.findProperty("STORE_FILE") ?: "missing-release-keystore.jks")
+            storePassword project.findProperty("STORE_PASSWORD") ?: "release"
+            keyAlias project.findProperty("KEY_ALIAS") ?: "release"
+            keyPassword project.findProperty("KEY_PASSWORD") ?: "release"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources false
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    packagingOptions {
+        // 因为mrtc库内部使用了NDK的c++_shared的编译参数
+        // 与其他库重复引用了，因此选其中一个即可
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs += ["-Xjvm-default=all"]
+    }
+
+    //关闭lint
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    packagingOptions {
+        doNotStrip "*/*/libconstants.so"
+        doNotStrip "*/*/libdji_innertools.so"
+        doNotStrip "*/*/libdjibase.so"
+        doNotStrip "*/*/libDJICSDKCommon.so"
+        doNotStrip "*/*/libDJIFlySafeCore-CSDK.so"
+        doNotStrip "*/*/libdjifs_jni-CSDK.so"
+        doNotStrip "*/*/libDJIRegister.so"
+        doNotStrip "*/*/libdjisdk_jni.so"
+        doNotStrip "*/*/libDJIUpgradeCore.so"
+        doNotStrip "*/*/libDJIUpgradeJNI.so"
+        doNotStrip "*/*/libDJIWaypointV2Core-CSDK.so"
+        doNotStrip "*/*/libdjiwpv2-CSDK.so"
+        doNotStrip "*/*/libFlightRecordEngine.so"
+        doNotStrip "*/*/libvideo-framing.so"
+        doNotStrip "*/*/libwaes.so"
+        doNotStrip "*/*/libagora-rtsa-sdk.so"
+        doNotStrip "*/*/libc++.so"
+        doNotStrip "*/*/libc++_shared.so"
+        doNotStrip "*/*/libmrtc_28181.so"
+        doNotStrip "*/*/libmrtc_agora.so"
+        doNotStrip "*/*/libmrtc_core.so"
+        doNotStrip "*/*/libmrtc_core_jni.so"
+        doNotStrip "*/*/libmrtc_data.so"
+        doNotStrip "*/*/libmrtc_log.so"
+        doNotStrip "*/*/libmrtc_onvif.so"
+        doNotStrip "*/*/libmrtc_rtmp.so"
+        doNotStrip "*/*/libmrtc_rtsp.so"
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    /** <-----------------依赖MSDK--------------------> **/
+    compileOnly deps.aircraftProvided
+    implementation deps.aircraft
+
+    /** <-----------------sample所需--------------------> **/
+    implementation project(':uxsdk')
+    implementation deps.appcompat
+    implementation deps.constraintLayout
+    implementation deps.aacCommon
+    implementation deps.aacRuntime
+    implementation deps.kotlinLib
+    implementation deps.ktxCore
+    implementation deps.ktxFrag
+    implementation deps.ktxNavigation
+    implementation deps.ktxNavigationUi
+    implementation deps.recyclerview
+    implementation deps.legacySupport
+    implementation deps.lifecycleViewModel
+    implementation deps.lifecycleLiveData
+    debugImplementation deps.leakcanary
+    implementation deps.glide
+    implementation deps.dynamicanimation
+    implementation deps.expandedit
+    implementation deps.rx3Kt
+    implementation deps.dom
+    kapt deps.glidecompiler
+    debugImplementation deps.lynx
+
+    /** <-----------------DI (Hilt)--------------------> **/
+    implementation 'com.google.dagger:hilt-android:2.55'
+    kapt 'com.google.dagger:hilt-android-compiler:2.55'
+
+    /** <-----------------MQTT--------------------> **/
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    /** <-----------------測試--------------------> **/
+    testImplementation deps.junit4
+    testImplementation deps.jnitCore
+    testImplementation deps.testRunner
+    testImplementation deps.junitExt
+    testImplementation 'io.mockk:mockk:1.13.8'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    testImplementation 'org.json:json:20231013'  // 提供 JVM 上可用的 JSONObject
+
+    androidTestImplementation deps.jnitCore
+    androidTestImplementation deps.testRunner
+    androidTestImplementation deps.junitExt
+    androidTestImplementation deps.espressoCore
+}

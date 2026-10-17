@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJI Mini 4 Pro 任務控制系統 — MQTT API 合約</title>
+    <style>
+        :root { --primary: #1a73e8; --accent: #ff6d00; --bg: #f8f9fa; --card: #fff; --text: #202124; --text-light: #5f6368; --border: #dadce0; --success: #0d904f; --warning: #e37400; --danger: #d93025; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px; max-width: 1000px; margin: 0 auto; padding: 40px 30px; }
+        h1 { font-size: 30px; font-weight: 800; border-bottom: 3px solid var(--success); padding-bottom: 12px; margin-bottom: 8px; }
+        .subtitle { color: var(--text-light); font-size: 16px; margin-bottom: 40px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--primary); margin-top: 50px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 18px; font-weight: 600; margin-top: 30px; margin-bottom: 12px; }
+        h4 { font-size: 16px; font-weight: 600; color: var(--text-light); margin-top: 20px; margin-bottom: 8px; }
+        p { margin-bottom: 12px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        thead th { background: #f1f3f4; padding: 10px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+        tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:hover { background: #f8f9fa; }
+        code { background: #f1f3f4; padding: 2px 5px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #d93025; }
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        pre code { background: none; color: inherit; padding: 0; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-green { background: #e6f4ea; color: var(--success); }
+        .badge-orange { background: #fef7e0; color: var(--warning); }
+        .badge-red { background: #fce8e6; color: var(--danger); }
+        .badge-blue { background: #e8f0fe; color: var(--primary); }
+        .alert { padding: 16px 20px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+        .alert-info { background: #e8f0fe; border-left: 4px solid var(--primary); }
+        .alert-warning { background: #fef7e0; border-left: 4px solid var(--warning); }
+        .alert-danger { background: #fce8e6; border-left: 4px solid var(--danger); }
+        .method-tag { display: inline-block; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 13px; margin-right: 8px; }
+        .method-sub { background: #e8f0fe; color: var(--primary); }
+        .method-pub { background: #e6f4ea; color: var(--success); }
+        .field-required { color: var(--danger); font-weight: 600; }
+        .field-optional { color: var(--text-light); }
+    </style>
+</head>
+<body>
+
+<h1>📡 MQTT API 合約</h1>
+<p class="subtitle">後端 ↔ App 通訊協定規格書 — 所有指令、回報、錯誤碼的精確定義</p>
+
+<h2>1. 連線資訊</h2>
+<div class="card">
+    <table>
+        <thead><tr><th>項目</th><th>值</th><th>備註</th></tr></thead>
+        <tbody>
+            <tr><td>Broker</td><td><code>broker.emqx.io:1883</code></td><td>⚠️ 測試用，正式環境需更換</td></tr>
+            <tr><td>Protocol</td><td><code>tcp://</code></td><td>正式環境改 <code>ssl://</code> port 8883</td></tr>
+            <tr><td>QoS</td><td><code>1</code></td><td>At least once</td></tr>
+            <tr><td>Topic Prefix</td><td><code>example/DRONE-001</code></td><td>可在 App 設定中修改</td></tr>
+            <tr><td>Client ID</td><td>App 自動產生</td><td>—</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h2>2. Topic 結構</h2>
+<table>
+    <thead><tr><th>Topic</th><th>方向</th><th>說明</th><th>頻率</th></tr></thead>
+    <tbody>
+        <tr><td><code>{prefix}/command</code></td><td>後端 → App</td><td>飛行指令</td><td>—</td></tr>
+        <tr><td><code>{prefix}/mission/start</code></td><td>後端 → App</td><td>單站任務指令</td><td>—</td></tr>
+        <tr><td><code>{prefix}/mission/multi</code></td><td>後端 → App</td><td>多站任務指令</td><td>—</td></tr>
+        <tr><td><code>{prefix}/status</code></td><td>App → 後端</td><td>飛行狀態回報</td><td>飛行 10s / 待機 30s</td></tr>
+        <tr><td><code>{prefix}/ack</code></td><td>App → 後端</td><td>指令執行結果</td><td>每條指令</td></tr>
+        <tr><td><code>{prefix}/heartbeat</code></td><td>App → 後端</td><td>連線心跳</td><td>每 5 秒</td></tr>
+    </tbody>
+</table>
+
+<h2>3. 後端 → App 指令</h2>
+
+<h3>3.1 飛行指令</h3>
+<div class="card">
+    <h4><span class="method-tag method-sub">SUB</span> <code>{prefix}/command</code></h4>
+    <pre><code>{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"cmd_001"</span>,          <span style="color:#6a9955">// 必填，唯一 ID（去重用，200 條 LRU）</span>
+    <span style="color:#9cdcfe">"cmd"</span>: <span style="color:#ce9178">"takeoff"</span>,             <span style="color:#6a9955">// 必填，指令類型</span>
+    <span style="color:#9cdcfe">"timestamp"</span>: <span style="color:#b5cea8">1700000001000</span>    <span style="color:#6a9955">// 必填，Unix timestamp (ms)</span>
+}</code></pre>
+
+    <table>
+        <thead><tr><th>cmd</th><th>說明</th><th>前置條件</th><th>ACK 行為</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><code>takeoff</code></td>
+                <td>自動起飛</td>
+                <td>state = IDLE</td>
+                <td>兩階段：accepted → success/failed</td>
+            </tr>
+            <tr>
+                <td><code>rtl</code></td>
+                <td>返航降落</td>
+                <td>飛行中（非 IDLE/RETURNING/ERROR）</td>
+                <td>活躍任務時改呼叫 cancelMission</td>
+            </tr>
+            <tr>
+                <td><code>cancel</code></td>
+                <td>取消任務</td>
+                <td>任務執行中</td>
+                <td>單階段：success</td>
+            </tr>
+            <tr>
+                <td><code>reset</code></td>
+                <td>重置為 IDLE</td>
+                <td>state = ERROR</td>
+                <td>單階段：success</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<h3>3.2 單站任務指令</h3>
+<div class="card">
+    <h4><span class="method-tag method-sub">SUB</span> <code>{prefix}/mission/start</code></h4>
+    <pre><code>{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"msn_001"</span>,              <span style="color:#6a9955">// 必填，唯一 ID</span>
+    <span style="color:#9cdcfe">"mission"</span>: <span style="color:#ce9178">"A"</span>,                   <span style="color:#6a9955">// 必填，"A" | "B" | "C" | "D"</span>
+    <span style="color:#9cdcfe">"target"</span>: {                          <span style="color:#6a9955">// 必填</span>
+        <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">24.939543</span>,               <span style="color:#6a9955">// 必填，-90 ~ 90</span>
+        <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.347937</span>,              <span style="color:#6a9955">// 必填，-180 ~ 180</span>
+        <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">15.0</span>                     <span style="color:#6a9955">// 必填，0 ~ maxFlightHeight</span>
+    },
+    <span style="color:#9cdcfe">"orbit"</span>: {                           <span style="color:#6a9955">// 可選（A 模式可省略）</span>
+        <span style="color:#9cdcfe">"radius"</span>: <span style="color:#b5cea8">15.0</span>,                  <span style="color:#6a9955">// 環繞半徑 (m)，0 = 原地</span>
+        <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">10.0</span>,                     <span style="color:#6a9955">// 環繞高度 (m)，null = 用 target.alt</span>
+        <span style="color:#9cdcfe">"gimbal_pitch"</span>: <span style="color:#b5cea8">-45.0</span>,           <span style="color:#6a9955">// 錄影雲台角度，預設 -45</span>
+        <span style="color:#9cdcfe">"photo_gimbal_pitch"</span>: <span style="color:#b5cea8">-30.0</span>,     <span style="color:#6a9955">// 拍照雲台角度，預設 -45（僅 A 模式）</span>
+        <span style="color:#9cdcfe">"max_alt"</span>: <span style="color:#b5cea8">30.0</span>,                  <span style="color:#6a9955">// 螺旋結束高度（C/D 模式必填）</span>
+        <span style="color:#9cdcfe">"turns"</span>: <span style="color:#b5cea8">4</span>,                       <span style="color:#6a9955">// 旋轉圈數 3-10（C/D 模式必填）</span>
+        <span style="color:#9cdcfe">"radius_end"</span>: <span style="color:#b5cea8">20.0</span>,               <span style="color:#6a9955">// 結束半徑（D 模式必填，需 > radius）</span>
+        <span style="color:#9cdcfe">"orbit_speed"</span>: <span style="color:#b5cea8">2.0</span>               <span style="color:#6a9955">// 環繞速度倍率 1.0~5.0（選填，預設 1.0）</span>
+        <span style="color:#9cdcfe">"final_heading"</span>: <span style="color:#b5cea8">90.0</span>,           <span style="color:#6a9955">// 結束後機頭轉向（C/D 選填，0~360，null=直接拉平）</span>
+    },
+    <span style="color:#9cdcfe">"photo_count"</span>: <span style="color:#b5cea8">7</span>,                    <span style="color:#6a9955">// 可選，拍照張數 2-20，預設 7</span>
+    <span style="color:#9cdcfe">"timestamp"</span>: <span style="color:#b5cea8">1700000002000</span>            <span style="color:#6a9955">// 必填</span>
+}</code></pre>
+
+    <h4>驗證規則</h4>
+    <div class="alert alert-info">
+        <strong>單一來源：</strong>以下規則由 App 端 <code>MissionValidator</code> 集中執行。任一項失敗即回傳 <code>failed</code> ACK（<code>error</code> 為第一條失敗訊息），任務不會進入狀態機。
+    </div>
+    <table>
+        <thead><tr><th>欄位</th><th>驗證</th><th>失敗時</th></tr></thead>
+        <tbody>
+            <tr><td><code>msg_id</code></td><td>不可為空</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>mission</code></td><td>"A" / "B" / "C" / "D"</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>target.lat</code></td><td>-90 ~ 90</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>target.lng</code></td><td>-180 ~ 180</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>target.alt</code></td><td>0 ~ maxFlightHeight</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>photo_count</code></td><td>2 ~ 20</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.radius</code>（通用）</td><td>0 ~ 1000</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.alt</code></td><td>0 ~ maxFlightHeight（選填）</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.gimbal_pitch</code></td><td>-130 ~ 45</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.photo_gimbal_pitch</code></td><td>-130 ~ 45</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.orbit_speed</code></td><td>1.0 ~ 5.0</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.radius</code> (B)</td><td>&gt; 0（必填）</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.radius</code> (C/D)</td><td>≥ 5</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.max_alt</code> (C/D)</td><td>&gt; 0 且 &gt; orbit.alt（必填）</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.turns</code> (C/D)</td><td>3 ~ 10（必填）</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.radius_end</code> (D)</td><td>&gt; radius 且 ≤ 1000（必填）</td><td>回傳 failed ACK</td></tr>
+            <tr><td><code>orbit.final_heading</code> (C/D)</td><td>0 ~ 360（選填）</td><td>回傳 failed ACK</td></tr>
+            <tr><td>距離</td><td>≤ maxFlightRadius</td><td>回傳 failed ACK</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h3>3.3 多站任務指令</h3>
+<div class="card">
+    <h4><span class="method-tag method-sub">SUB</span> <code>{prefix}/mission/multi</code></h4>
+    <pre><code>{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"msn_multi_001"</span>,
+    <span style="color:#9cdcfe">"stops"</span>: [                               <span style="color:#6a9955">// 必填，至少 2 站，最多 10 站</span>
+        {
+            <span style="color:#9cdcfe">"mission"</span>: <span style="color:#ce9178">"A"</span>,
+            <span style="color:#9cdcfe">"target"</span>: { <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">25.0</span>, <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.5</span>, <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">15.0</span> },
+            <span style="color:#9cdcfe">"orbit"</span>: { <span style="color:#9cdcfe">"gimbal_pitch"</span>: <span style="color:#b5cea8">-45</span> }
+        },
+        {
+            <span style="color:#9cdcfe">"mission"</span>: <span style="color:#ce9178">"B"</span>,
+            <span style="color:#9cdcfe">"target"</span>: { <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">25.001</span>, <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.501</span>, <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">20.0</span> },
+            <span style="color:#9cdcfe">"orbit"</span>: { <span style="color:#9cdcfe">"radius"</span>: <span style="color:#b5cea8">15</span>, <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">15</span>, <span style="color:#9cdcfe">"gimbal_pitch"</span>: <span style="color:#b5cea8">-45</span> }
+        }
+    ],
+    <span style="color:#9cdcfe">"timestamp"</span>: <span style="color:#b5cea8">1700000002000</span>
+}</code></pre>
+
+    <h4>額外驗證</h4>
+    <table>
+        <thead><tr><th>驗證項目</th><th>說明</th></tr></thead>
+        <tbody>
+            <tr><td>stops 數量</td><td>2 ~ 10 站</td></tr>
+            <tr><td>任一站解析失敗</td><td>整體回傳 failed</td></tr>
+            <tr><td>第一站距離</td><td>Home → 第一站 ≤ maxFlightRadius</td></tr>
+            <tr><td>相鄰站距離</td><td>每站之間 ≤ maxFlightRadius</td></tr>
+            <tr><td>每站的驗證</td><td>同 mission/start</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h2>4. App → 後端回報</h2>
+
+<h3>4.1 ACK 回報</h3>
+<div class="card">
+    <h4><span class="method-tag method-pub">PUB</span> <code>{prefix}/ack</code></h4>
+
+    <h4>兩階段 ACK（takeoff / rtl / mission/start / mission/multi）</h4>
+    <pre><code><span style="color:#6a9955">// 第一階段：指令已收到並開始執行</span>
+{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"msn_001"</span>,
+    <span style="color:#9cdcfe">"status"</span>: <span style="color:#ce9178">"accepted"</span>,
+    <span style="color:#9cdcfe">"action"</span>: <span style="color:#ce9178">"mission_start"</span>
+}
+
+<span style="color:#6a9955">// 第二階段：執行成功</span>
+{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"msn_001"</span>,
+    <span style="color:#9cdcfe">"status"</span>: <span style="color:#ce9178">"success"</span>,
+    <span style="color:#9cdcfe">"action"</span>: <span style="color:#ce9178">"mission_start"</span>
+}
+
+<span style="color:#6a9955">// 第二階段：執行失敗</span>
+{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"msn_001"</span>,
+    <span style="color:#9cdcfe">"status"</span>: <span style="color:#ce9178">"failed"</span>,
+    <span style="color:#9cdcfe">"action"</span>: <span style="color:#ce9178">"mission_start"</span>,
+    <span style="color:#9cdcfe">"error"</span>: <span style="color:#ce9178">"GPS signal too weak"</span>
+}</code></pre>
+
+    <h4>單階段 ACK（cancel / reset）</h4>
+    <pre><code>{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"cmd_003"</span>,
+    <span style="color:#9cdcfe">"status"</span>: <span style="color:#ce9178">"success"</span>,
+    <span style="color:#9cdcfe">"action"</span>: <span style="color:#ce9178">"cancel"</span>
+}</code></pre>
+
+    <h4>action 值一覽</h4>
+    <table>
+        <thead><tr><th>action</th><th>觸發來源</th></tr></thead>
+        <tbody>
+            <tr><td><code>takeoff</code></td><td>/command cmd=takeoff</td></tr>
+            <tr><td><code>rtl</code></td><td>/command cmd=rtl</td></tr>
+            <tr><td><code>cancel</code></td><td>/command cmd=cancel</td></tr>
+            <tr><td><code>reset</code></td><td>/command cmd=reset</td></tr>
+            <tr><td><code>mission_start</code></td><td>/mission/start</td></tr>
+            <tr><td><code>multi_start</code></td><td>/mission/multi</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h3>4.2 狀態回報</h3>
+<div class="card">
+    <h4><span class="method-tag method-pub">PUB</span> <code>{prefix}/status</code></h4>
+    <pre><code>{
+    <span style="color:#9cdcfe">"state"</span>: <span style="color:#ce9178">"FLYING_TO_TARGET"</span>,    <span style="color:#6a9955">// MissionState enum 名稱</span>
+    <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">24.939543</span>,                 <span style="color:#6a9955">// 當前緯度</span>
+    <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.347937</span>,                <span style="color:#6a9955">// 當前經度</span>
+    <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">28.5</span>,                      <span style="color:#6a9955">// 相對高度 (m)</span>
+    <span style="color:#9cdcfe">"battery"</span>: <span style="color:#b5cea8">84</span>,                    <span style="color:#6a9955">// 電池電量 (%)</span>
+    <span style="color:#9cdcfe">"heading"</span>: <span style="color:#b5cea8">180.5</span>,                  <span style="color:#6a9955">// 機頭朝向 (°)</span>
+    <span style="color:#9cdcfe">"gps_satellites"</span>: <span style="color:#b5cea8">15</span>,             <span style="color:#6a9955">// GPS 衛星數</span>
+    <span style="color:#9cdcfe">"timestamp"</span>: <span style="color:#b5cea8">1700000003000</span>          <span style="color:#6a9955">// Unix timestamp (ms)</span>
+}</code></pre>
+
+    <h4>回報頻率</h4>
+    <table>
+        <thead><tr><th>App 狀態</th><th>頻率</th></tr></thead>
+        <tbody>
+            <tr><td>飛行中（非 IDLE）</td><td>每 <strong>10 秒</strong></td></tr>
+            <tr><td>待機（IDLE）</td><td>每 <strong>30 秒</strong></td></tr>
+        </tbody>
+    </table>
+
+    <h4>關鍵狀態轉換即時回報</h4>
+    <p>以下狀態轉換時會<strong>額外</strong>立即發送一次完整 status：</p>
+    <table>
+        <thead><tr><th>狀態</th><th>觸發時機</th></tr></thead>
+        <tbody>
+            <tr><td><code>TAKING_OFF</code></td><td>開始起飛</td></tr>
+            <tr><td><code>RETURNING_HOME</code></td><td>開始返航</td></tr>
+            <tr><td><code>IDLE</code></td><td>任務完成 / 重置</td></tr>
+            <tr><td><code>ERROR</code></td><td>發生錯誤</td></tr>
+            <tr><td><code>ORBITING</code></td><td>開始環繞</td></tr>
+            <tr><td><code>SPIRAL_ASCENDING</code></td><td>開始螺旋上升</td></tr>
+            <tr><td><code>GIMBAL_PULL_UP</code></td><td>C/D 結束雲台拉平</td></tr>
+            <tr><td><code>FLYING_TO_NEXT</code></td><td>Multi-Stop 站間飛行</td></tr>
+        </tbody>
+    </table>
+
+    <h4>所有 MissionState 值</h4>
+    <table>
+        <thead><tr><th>state</th><th>說明</th><th>後端應如何解讀</th></tr></thead>
+        <tbody>
+            <tr><td><code>IDLE</code></td><td>待機</td><td>可發送新任務</td></tr>
+            <tr><td><code>TAKING_OFF</code></td><td>起飛中</td><td>任務執行中，勿重複指令</td></tr>
+            <tr><td><code>FLYING_TO_TARGET</code></td><td>飛往目標</td><td>任務執行中</td></tr>
+            <tr><td><code>DESCENDING_TO_ORBIT_ALT</code></td><td>下降到環繞高度</td><td>任務執行中</td></tr>
+            <tr><td><code>ORBITING</code></td><td>環繞錄影中</td><td>任務執行中</td></tr>
+            <tr><td><code>SPIRAL_ASCENDING</code></td><td>螺旋上升錄影中</td><td>任務執行中</td></tr>
+            <tr><td><code>GIMBAL_PULL_UP</code></td><td>雲台拉平過渡（C/D 結束，錄影中）</td><td>任務收尾，接近 RETURNING_HOME</td></tr>
+            <tr><td><code>RECORDING_360</code></td><td>原地旋轉錄影中</td><td>任務執行中</td></tr>
+            <tr><td><code>SHOOTING_PHOTOS</code></td><td>拍照中</td><td>任務執行中</td></tr>
+            <tr><td><code>FLYING_TO_NEXT</code></td><td>飛往下一站</td><td>Multi-Stop 執行中</td></tr>
+            <tr><td><code>RETURNING_HOME</code></td><td>返航中</td><td>任務結束，等待 IDLE</td></tr>
+            <tr><td><code>ERROR</code></td><td>錯誤</td><td>可發送 reset 指令</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h3>4.3 心跳</h3>
+<div class="card">
+    <h4><span class="method-tag method-pub">PUB</span> <code>{prefix}/heartbeat</code></h4>
+    <pre><code>{
+    <span style="color:#9cdcfe">"timestamp"</span>: <span style="color:#b5cea8">1700000003000</span>
+}</code></pre>
+    <p>固定每 <strong>5 秒</strong>發送。後端可用於偵測 App 是否在線。</p>
+</div>
+
+<h2>5. 錯誤碼與失敗原因</h2>
+<div class="card">
+    <h4>ACK error 欄位可能的值</h4>
+    <table>
+        <thead><tr><th>error 訊息</th><th>觸發條件</th><th>建議處理</th></tr></thead>
+        <tbody>
+            <tr><td><code>"GPS not ready"</code></td><td>衛星 < 8 或訊號 < Level 3</td><td>等待 GPS 穩定後重試</td></tr>
+            <tr><td><code>"Target exceeds safe radius"</code></td><td>目標距離 > maxFlightRadius</td><td>調整目標位置或限制值</td></tr>
+            <tr><td><code>"Battery risk: ..."</code></td><td>電量 < 預估用量 + 10%（僅警告，不阻擋）</td><td>可繼續執行，但有風險</td></tr>
+            <tr><td><code>"Battery below RTH threshold"</code></td><td>電量 ≤ 返航門檻</td><td>等待充電</td></tr>
+            <tr><td><code>"Unknown mission: ..."</code></td><td>mission 不是 A/B/C/D</td><td>修正 mission 欄位</td></tr>
+            <tr><td><code>"Invalid latitude: ..."</code></td><td>lat 超出 -90~90</td><td>檢查座標值</td></tr>
+            <tr><td><code>"Invalid longitude: ..."</code></td><td>lng 超出 -180~180</td><td>檢查座標值</td></tr>
+            <tr><td><code>"Invalid altitude: ... (max: ...)"</code></td><td>alt 超出 0~maxFlightHeight</td><td>調整高度</td></tr>
+            <tr><td><code>"Invalid photo_count: ... (must be 2~20)"</code></td><td>photo_count 超出 2~20</td><td>調整張數</td></tr>
+            <tr><td><code>"Invalid orbit.alt: ..."</code></td><td>orbit.alt 超出 0~maxFlightHeight</td><td>調整環繞高度</td></tr>
+            <tr><td><code>"Invalid orbit.radius: ..."</code></td><td>orbit.radius 超出 0~1000</td><td>調整半徑</td></tr>
+            <tr><td><code>"Invalid gimbal_pitch: ... (range: -130 to 45)"</code></td><td>gimbal_pitch 超出 -130~45</td><td>調整雲台角度</td></tr>
+            <tr><td><code>"Invalid photo_gimbal_pitch: ... (range: -130 to 45)"</code></td><td>photo_gimbal_pitch 超出 -130~45</td><td>調整雲台角度</td></tr>
+            <tr><td><code>"Invalid orbit_speed: ... (must be 1.0-5.0)"</code></td><td>orbit_speed 超出 1.0~5.0</td><td>調整速度倍率</td></tr>
+            <tr><td><code>"Mission B requires orbit block with radius > 0"</code></td><td>B 模式缺少 orbit 或 radius ≤ 0</td><td>提供 radius</td></tr>
+            <tr><td><code>"Mission C requires ..."</code></td><td>C 模式參數不完整（radius ≥ 5、max_alt &gt; 0、max_alt &gt; alt、turns 3~10）</td><td>補齊必要參數</td></tr>
+            <tr><td><code>"Mission D requires ..."</code></td><td>D 模式參數不完整（含 radius_end &gt; radius 且 ≤ 1000）</td><td>補齊必要參數</td></tr>
+            <tr><td><code>"Mission D: final_heading (...) must be 0~360°"</code></td><td>final_heading 超出 0~360</td><td>調整角度</td></tr>
+            <tr><td><code>"Not in IDLE state"</code></td><td>非 IDLE 時發送任務</td><td>等待 IDLE 或發送 reset</td></tr>
+            <tr><td><code>"Parse error"</code></td><td>JSON 格式錯誤</td><td>檢查 JSON 結構</td></tr>
+            <tr><td><code>"Distance too far between stops"</code></td><td>Multi-Stop 相鄰站距離過遠</td><td>調整站點位置</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h2>6. 指令去重機制</h2>
+<div class="card">
+    <div class="alert alert-warning">
+        <strong>⚠️ 重要：</strong>App 使用 <code>msg_id</code> 進行指令去重。相同 <code>msg_id</code> 的指令只會被處理一次。後端必須確保每條指令的 <code>msg_id</code> 唯一。
+    </div>
+    <table>
+        <thead><tr><th>項目</th><th>說明</th></tr></thead>
+        <tbody>
+            <tr><td>去重容器</td><td><code>LinkedHashSet</code>（LRU 策略）</td></tr>
+            <tr><td>容量上限</td><td>500 條</td></tr>
+            <tr><td>淘汰策略</td><td>超過 500 時移除最舊 200 條</td></tr>
+            <tr><td>空 msg_id</td><td>視為無效，回傳 failed ACK</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h2>7. 完整時序圖</h2>
+<div class="card">
+    <h4>任務 A 單站執行時序</h4>
+    <pre><code>後端                              App                           無人機
+ │                                 │                              │
+ │── mission/start ──────────────▶│                              │
+ │                                 │── 解析 + 驗證               │
+ │◀── ack(accepted) ──────────────│                              │
+ │                                 │── takeOff() ───────────────▶│ 起飛
+ │                                 │── climbToAltitude() ───────▶│ 爬升
+ │                                 │── flyToTarget() ───────────▶│ 飛往目標
+ │◀── status(FLYING_TO_TARGET) ───│                              │
+ │   (每 10 秒)                    │                              │
+ │                                 │── setPitchAngle(-45) ──────▶│ 雲台
+ │                                 │── startVideoRecord() ──────▶│ 開始錄影
+ │◀── status(RECORDING_360) ──────│                              │
+ │                                 │── yaw 12°/s × 370° ───────▶│ 旋轉
+ │                                 │── stopVideoRecord() ───────▶│ 停止錄影
+ │                                 │── executePhotoSequence() ──▶│ 7 張拍照
+ │◀── status(RETURNING_HOME) ─────│                              │
+ │                                 │── startRTH() ──────────────▶│ 返航
+ │                                 │   (等待 motor-locked)        │
+ │                                 │── downloadLastNPhotos(7)    │ 下載
+ │◀── ack(success) ───────────────│                              │
+ │◀── status(IDLE) ───────────────│                              │
+    </code></pre>
+</div>
+
+<h2>8. 後端整合檢查清單</h2>
+<div class="card">
+    <table>
+        <thead><tr><th>#</th><th>檢查項目</th><th>狀態</th></tr></thead>
+        <tbody>
+            <tr><td>1</td><td>每條指令都有唯一的 <code>msg_id</code></td><td>☐</td></tr>
+            <tr><td>2</td><td>座標範圍驗證（lat: -90~90, lng: -180~180）</td><td>☐</td></tr>
+            <tr><td>3</td><td>B 模式必填 <code>orbit.radius > 0</code></td><td>☐</td></tr>
+            <tr><td>4</td><td>C 模式必填 <code>radius ≥ 5</code> + <code>max_alt</code> + <code>turns</code>（3-10）</td><td>☐</td></tr>
+            <tr><td>4b</td><td>D 模式必填 <code>radius ≥ 5</code> + <code>max_alt</code> + <code>turns</code> + <code>radius_end > radius</code></td><td>☐</td></tr>
+            <tr><td>4c</td><td><code>orbit_speed</code> 1.0~5.0、<code>gimbal_pitch</code>/<code>photo_gimbal_pitch</code> -130~45</td><td>☐</td></tr>
+            <tr><td>4d</td><td>C/D 模式選填 <code>final_heading</code>（0~360°，null=不繞行直接拉平）</td><td>☐</td></tr>
+            <tr><td>5</td><td>收到 <code>accepted</code> ACK 後等待 <code>success/failed</code></td><td>☐</td></tr>
+            <tr><td>6</td><td>監聽 <code>/status</code> 的 state 欄位判斷任務進度</td><td>☐</td></tr>
+            <tr><td>7</td><td>監聽 <code>/heartbeat</code> 偵測 App 連線狀態</td><td>☐</td></tr>
+            <tr><td>8</td><td>收到 <code>ERROR</code> 狀態後可發送 <code>reset</code> 指令</td><td>☐</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:60px;padding:20px;background:#f1f3f4;border-radius:8px;text-align:center;color:var(--text-light);font-size:13px">
+    <p>📡 DJI Mini 4 Pro 任務控制系統 — MQTT API 合約 v1.1</p>
+    <p>最後更新：2026-08-11 | SDK: DJI MSDK v5 (5.18.0)</p>
+</div>
+
+</body>
+</html>

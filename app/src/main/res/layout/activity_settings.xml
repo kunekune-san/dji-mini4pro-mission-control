@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- MQTT Broker Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MQTT Broker"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Broker Host"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. broker.emqx.io"
+            android:inputType="textUri"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Broker Port"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_port"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. 1883"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Topic Prefix (Drone ID)"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_topic_prefix"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. example/DRONE-001"
+            android:inputType="text"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username (optional)"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Leave empty if no auth"
+            android:inputType="text"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Password (optional)"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_mqtt_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Leave empty if no auth"
+            android:inputType="textPassword"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btn_save_mqtt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save MQTT Settings"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Flight Limits Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="飛行限制"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="限制高度（公尺，20–500）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_max_height"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="120"
+            android:inputType="numberDecimal"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="限制距離（公尺，15–40000）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_max_radius"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1000"
+            android:inputType="numberDecimal"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="返航高度（公尺，20–500）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_rth_height"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="30"
+            android:inputType="numberDecimal"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btn_save_flight_limits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="儲存飛行限制"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tv_flight_limits_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚠ 飛機未連線，設定將於連線後套用"
+            android:textColor="#FFCC00"
+            android:textSize="12sp"
+            android:layout_marginBottom="32dp"
+            android:visibility="gone" />
+
+        <!-- Flight Speed Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="飛行速度"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="最大飛行速度（m/s）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_max_speed"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="12"
+                android:progress="4"
+                android:layout_marginHorizontal="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="13"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_max_speed_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目前設定：5.0 m/s"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="接近目標減速增益（Gain）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="越大 → 離目標越遠就開始減速，飛行越穩定"
+            android:textColor="#AAAAAA"
+            android:textSize="13sp"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.1"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_speed_gain"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="90"
+                android:progress="40"
+                android:layout_marginHorizontal="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.0"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_speed_gain_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目前設定：0.5"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Signal Smoothing Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="環繞精度強化（進階）"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- GPS EMA Alpha -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GPS 濾波係數（EMA α）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="越小 → 濾波越強、軌跡越圓，但響應稍慢。建議 0.3~0.5"
+            android:textColor="#AAAAAA"
+            android:textSize="13sp"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.2"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_gps_ema_alpha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="6"
+                android:progress="2"
+                android:layout_marginHorizontal="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.8"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_gps_ema_alpha_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目前設定：0.4"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp" />
+
+        <!-- CMD Smooth Alpha -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="指令平滑係數（CMD α）"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="越小 → 指令越平滑、畫面越穩，但響應稍慢。建議 0.4~0.6"
+            android:textColor="#AAAAAA"
+            android:textSize="13sp"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.3"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_cmd_smooth_alpha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="5"
+                android:progress="2"
+                android:layout_marginHorizontal="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.8"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_cmd_smooth_alpha_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目前設定：0.5"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Battery RTH Threshold Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="電池返航門檻"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="電量低於此值時自動返航（短程建議 25–30%，長程建議 35–45%）"
+            android:textColor="#AAAAAA"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20%"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_battery_threshold"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="30"
+                android:progress="5"
+                android:layout_marginHorizontal="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="50%"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_battery_threshold_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目前設定：30%"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Video Recording Settings Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="錄影格式設定"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="錄影標準"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <RadioGroup
+            android:id="@+id/rg_video_standard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <RadioButton
+                android:id="@+id/rb_pal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="PAL (25/50fps)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+
+            <RadioButton
+                android:id="@+id/rb_ntsc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="NTSC (30/60fps)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="錄影解析度與幀率"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <Spinner
+            android:id="@+id/spinner_resolution"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="錄影檔格式"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <Spinner
+            android:id="@+id/spinner_video_format"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_save_video_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="儲存錄影設定"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tv_video_settings_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚠ 飛機未連線，無法讀取/設定錄影格式"
+            android:textColor="#FFCC00"
+            android:textSize="12sp"
+            android:layout_marginBottom="32dp"
+            android:visibility="gone" />
+
+        <!-- Magnetic Declination Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="磁偏角補償"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="環繞拍攝時鏡頭朝向中心的 yaw 補償（度）"
+            android:textColor="#AAAAAA"
+            android:textSize="13sp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="正=東偏，負=西偏。台灣約 -5°，日本約 -7°，不確定設 0 即可"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/et_magnetic_declination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="0.0"
+            android:inputType="numberDecimal|numberSigned"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_save_magnetic_declination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="儲存磁偏角設定"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Visual Yaw Offset Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="環繞 Yaw 偏移"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="環繞拍攝時機頭朝向的手動微調（°/s）"
+            android:textColor="#AAAAAA"
+            android:textSize="13sp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="負值=偏左，正值=偏右。預設 0（不偏移），範圍 -45 ~ +45"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/et_visual_yaw_offset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="0.0"
+            android:inputType="numberDecimal|numberSigned"
+            android:textColor="@color/white"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_save_visual_yaw_offset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="儲存 Yaw 偏移設定"
+            android:layout_marginBottom="32dp" />
+
+        <!-- RC Stick Mode Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RC Stick Mode"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_rc_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/rb_mode_jp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JP (Japanese)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+
+            <RadioButton
+                android:id="@+id/rb_mode_usa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="USA (American)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+
+            <RadioButton
+                android:id="@+id/rb_mode_ch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CH (Chinese)"
+                android:textColor="@color/white"
+                android:buttonTint="@color/white" />
+        </RadioGroup>
+
+
+        <!-- App Update Date -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="APP更新日期"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_app_update_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2026-08-06"
+            android:textColor="#AAAAAA"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+</ScrollView>

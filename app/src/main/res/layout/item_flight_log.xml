@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FF1A1A1A"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="8dp"
+    android:layout_marginBottom="4dp">
+
+    <!-- 上排：時間 + 事件類型 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvLogTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2026-01-01 12:00"
+            android:textColor="#888888"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+
+        <TextView
+            android:id="@+id/tvLogType"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="低電池返航"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:gravity="end" />
+    </LinearLayout>
+
+    <!-- 下排：原因 + 詳細數據 -->
+    <TextView
+        android:id="@+id/tvLogReason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="firmware_low_battery_rth"
+        android:textColor="#CCFFFFFF"
+        android:textSize="11sp"
+        android:fontFamily="monospace"
+        android:layout_marginTop="2dp" />
+
+    <TextView
+        android:id="@+id/tvLogDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="24.9395° 121.3479°  ALT 10.0m  BAT 25%  GPS 12"
+        android:textColor="#666666"
+        android:textSize="10sp"
+        android:fontFamily="monospace"
+        android:layout_marginTop="2dp" />
+
+    <!-- MQTT Payload（可選，有值時顯示） -->
+    <TextView
+        android:id="@+id/tvMqttPayload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#4CAF50"
+        android:textSize="9sp"
+        android:fontFamily="monospace"
+        android:maxLines="3"
+        android:ellipsize="end"
+        android:layout_marginTop="4dp"
+        android:visibility="gone" />
+
+</LinearLayout>

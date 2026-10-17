@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJI Mini 4 Pro 任務控制 App — 完全操作手冊</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --code-bg: #1c2128;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 {
+    font-size: 2em;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+  }
+  h1 small { display: block; font-size: 0.45em; color: var(--muted); font-weight: normal; margin-top: 8px; }
+  h2 {
+    font-size: 1.5em;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+  }
+  h3 { font-size: 1.15em; margin-top: 28px; margin-bottom: 12px; color: var(--text); }
+  h4 { font-size: 1em; margin-top: 20px; margin-bottom: 8px; color: var(--muted); }
+  p { margin-bottom: 12px; }
+  blockquote {
+    border-left: 4px solid var(--accent);
+    padding: 12px 20px;
+    margin: 16px 0;
+    background: var(--card);
+    border-radius: 0 8px 8px 0;
+    color: var(--muted);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.92em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+  }
+  th { background: var(--card); color: var(--accent); font-weight: 600; }
+  tr:hover { background: rgba(88,166,255,0.04); }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    font-size: 0.85em;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+  ul, ol { margin: 8px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 28px;
+    margin: 20px 0 32px;
+  }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin-bottom: 4px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.78em;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .badge-in { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-out { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge-warn { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge-err { background: rgba(248,81,73,0.15); color: var(--red); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .card h4 { margin-top: 0; color: var(--accent); }
+  @media (max-width: 640px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .container { padding: 20px 16px 60px; }
+    h1 { font-size: 1.5em; }
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  a { color: var(--accent); }
+  strong { color: #fff; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li::before { content: "☐ "; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>DJI Mini 4 Pro 任務控制 App<small>完全操作手冊 — DJI RC-N2 + MSDK v5</small></h1>
+
+<div class="toc">
+<strong>目錄</strong>
+<ol>
+<li><a href="#s1">硬體需求與準備</a></li>
+<li><a href="#s2">首次安裝與設定</a></li>
+<li><a href="#s3">App 設定頁面說明</a>
+  <ol style="margin-top:4px;">
+    <li><a href="#s3-1">MQTT Broker 設定</a></li>
+    <li><a href="#s3-2">飛行限制</a></li>
+    <li><a href="#s3-3">飛行速度</a></li>
+    <li><a href="#s3-4">電池返航門檻</a></li>
+    <li><a href="#s3-5">磁偏角補償</a></li>
+    <li><a href="#s3-6">遙控器搖桿模式</a></li>
+    <li><a href="#s3-7">訊號平滑濾波</a></li>
+    <li><a href="#s3-8">錄影格式設定</a></li>
+  </ol>
+</li>
+<li><a href="#s4">任務模式總覽</a></li>
+<li><a href="#s5">MQTT 完整 API 參考</a></li>
+<li><a href="#s6">安全機制與注意事項</a></li>
+<li><a href="#s7">疑難排解</a></li>
+</ol>
+</div>
+
+<!-- ==================== Section 1 ==================== -->
+<h2 id="s1">1. 硬體需求與準備</h2>
+
+<h3>必備設備</h3>
+<table>
+<tr><th>項目</th><th>說明</th></tr>
+<tr><td>無人機</td><td>DJI Mini 4 Pro</td></tr>
+<tr><td>遙控器</td><td>DJI RC-N2</td></tr>
+<tr><td>手機 / 平板</td><td>Android 7.0+，建議螢幕 5.5 吋以上</td></tr>
+<tr><td>USB-C 傳輸線</td><td>連接手機與遙控器</td></tr>
+</table>
+
+<h3>飛行前檢查清單</h3>
+<ul class="checklist">
+<li>電池充滿（建議 ≥ 90%）</li>
+<li>GPS 衛星數 ≥ 8 且訊號等級 ≥ LEVEL_3</li>
+<li>遙控器搖桿模式確認（USA / JP / CH）</li>
+<li>磁偏角設定（出國飛行時）</li>
+<li>MQTT Broker 連線正常</li>
+<li>飛行區域無禁飛限制</li>
+</ul>
+
+<!-- ==================== Section 2 ==================== -->
+<h2 id="s2">2. 首次安裝與設定</h2>
+
+<h3>Step 1：安裝 App</h3>
+<ol>
+<li>使用 Android Studio 開啟專案</li>
+<li>連接手機（開啟 USB 偵錯）</li>
+<li>執行 <code>assembleDebug</code> 或直接 Run</li>
+<li>App 安裝後開啟</li>
+</ol>
+
+<h3>Step 2：連接遙控器與無人機</h3>
+<ol>
+<li>遙控器開機 → 手機插入遙控器 → 自動開啟 DJI App</li>
+<li>確認 DJI MSDK 已正確初始化（主畫面顯示連線狀態）</li>
+<li>無人機開機 → 等待 GPS 定位完成</li>
+</ol>
+
+<h3>Step 3：進入設定頁面</h3>
+<p>從主畫面進入 <strong>Settings</strong> 頁面，依序完成以下設定。</p>
+
+<!-- ==================== Section 3 ==================== -->
+<h2 id="s3">3. App 設定頁面說明</h2>
+
+<h3 id="s3-1">3.1 MQTT Broker 設定</h3>
+<p>用於與後端系統通訊。App 透過 MQTT 接收飛行指令、回報狀態。</p>
+<table>
+<tr><th>欄位</th><th>預設值</th><th>說明</th></tr>
+<tr><td>Broker Host</td><td><code>broker.emqx.io</code></td><td>MQTT Broker 位址（IP 或網址）</td></tr>
+<tr><td>Broker Port</td><td><code>1883</code></td><td>MQTT 連接埠</td></tr>
+<tr><td>Topic Prefix</td><td><code>example/DRONE-001</code></td><td>Topic 前綴（可當作 Drone ID）</td></tr>
+<tr><td>Username</td><td>空</td><td>帳號（選填，無驗證可留空）</td></tr>
+<tr><td>Password</td><td>空</td><td>密碼（選填）</td></tr>
+</table>
+<blockquote>
+<strong>注意：</strong>儲存後需重新連線才會生效。正式上線建議更換為自架 Broker + TLS 加密。Topic Prefix 就是這台無人機的識別碼，後端需用相同前綴發送指令。
+</blockquote>
+
+<h3 id="s3-2">3.2 飛行限制</h3>
+<table>
+<tr><th>欄位</th><th>範圍</th><th>預設</th><th>說明</th></tr>
+<tr><td>限制高度</td><td>20–120 m</td><td>120 m</td><td>最大飛行高度</td></tr>
+<tr><td>限制距離</td><td>15–8000 m</td><td>1000 m</td><td>離 Home 點最大水平距離</td></tr>
+<tr><td>返航高度</td><td>20–500 m</td><td>30 m</td><td>自動返航時的飛行高度</td></tr>
+</table>
+<blockquote>返航高度不得超過限制高度（會自動調整）。設定會寫入無人機（需已連線），未連線時儲存後於連線時套用。</blockquote>
+
+<h3 id="s3-3">3.3 飛行速度</h3>
+<table>
+<tr><th>欄位</th><th>範圍</th><th>預設</th><th>說明</th></tr>
+<tr><td>最大飛行速度</td><td>1.0–13.0 m/s</td><td>5.0 m/s</td><td>VirtualStick 水平最大速度</td></tr>
+<tr><td>接近目標減速增益</td><td>0.1–1.0</td><td>0.5</td><td>越大 → 離目標越遠就開始減速</td></tr>
+</table>
+<div class="grid-2">
+<div class="card"><h4>🎯 精準定位</h4>3.0 m/s + Gain 0.8</div>
+<div class="card"><h4>✈️ 一般任務</h4>5.0 m/s + Gain 0.5</div>
+<div class="card"><h4>🚀 快速移動</h4>8.0 m/s + Gain 0.3</div>
+</div>
+
+<h3 id="s3-4">3.4 電池返航門檻</h3>
+<table>
+<tr><th>欄位</th><th>範圍</th><th>預設</th><th>說明</th></tr>
+<tr><td>返航門檻</td><td>20–50%</td><td>20%</td><td>電量低於此值自動返航</td></tr>
+</table>
+<p>短程任務（&lt; 500m）建議 20–30%，長程任務（&gt; 500m）建議 35–45%。</p>
+<blockquote><strong>注意：</strong>實際返航門檻會取「使用者設定」與「韌體估算返航電量 + 安全邊際」兩者的較大值，確保不會因設定過低而無法返航。</blockquote>
+
+<h3 id="s3-5">3.5 磁偏角補償</h3>
+<table>
+<tr><th>欄位</th><th>範圍</th><th>預設</th><th>說明</th></tr>
+<tr><td>磁偏角</td><td>-30° ~ +30°</td><td>0（不補償）</td><td>環繞拍攝時鏡頭朝向中心的 yaw 補償</td></tr>
+</table>
+<h4>各國參考值</h4>
+<table>
+<tr><th>地區</th><th>磁偏角</th></tr>
+<tr><td>🇹🇼 台灣</td><td>-5°</td></tr>
+<tr><td>🇯🇵 日本</td><td>-7°</td></tr>
+<tr><td>🇰🇷 韓國</td><td>-8°</td></tr>
+<tr><td>🇺🇸 美國東岸</td><td>-13°</td></tr>
+<tr><td>🇺🇸 美國西岸</td><td>+15°</td></tr>
+<tr><td>🇪🇺 歐洲</td><td>+2° ~ +5°</td></tr>
+<tr><td>🇦🇺 澳洲</td><td>+10° ~ +12°</td></tr>
+</table>
+<blockquote>不確定時設 0 即可，PI 控制器會自動慢慢補償。</blockquote>
+
+<h3 id="s3-6">3.6 遙控器搖桿模式</h3>
+<table>
+<tr><th>模式</th><th>說明</th></tr>
+<tr><td>USA</td><td>美國模式（預設）</td></tr>
+<tr><td>JP</td><td>日本模式</td></tr>
+<tr><td>CH</td><td>中國模式</td></tr>
+</table>
+<p>切換後立即生效，寫入遙控器。</p>
+
+<h3 id="s3-7">3.7 訊號平滑濾波</h3>
+<p>用於減少 GPS 座標跳動與 VirtualStick 指令高頻震動，提升環繞軌跡的圓度與穩定性。兩組參數都使用 EMA（指數移動平均）低通濾波演算法。</p>
+
+<h4>GPS 座標濾波（GPS EMA Alpha）</h4>
+<p>對 GPS 回傳的經緯度做平滑處理，減少因衛星訊號微小偏移造成的座標跳動。此濾波後的座標僅用於飛行控制（環繞、飛往目標），HUD 顯示仍使用原始座標。</p>
+<table>
+<tr><th>欄位</th><th>範圍</th><th>預設</th><th>說明</th></tr>
+<tr><td>GPS 濾波係數</td><td>0.2–0.8</td><td>0.4</td><td>越小 → 濾波越強（更平滑但延遲增加）；越大 → 越即時（但跳動較明顯）</td></tr>
+</table>
+<div class="grid-2">
+<div class="card"><h4>🛡️ 強濾波</h4>0.2 — GPS 訊號不穩定時使用，犧牲即時性換取穩定</div>
+<div class="card"><h4>⚡ 弱濾波</h4>0.8 — GPS 訊號良好時使用，減少延遲、提升即時性</div>
+</div>
+<blockquote><strong>延遲分析：</strong>alpha=0.4 時，GPS 濾波引入約 83ms 延遲（2.5 個 GPS 更新週期）。搭配指令平滑後，複合延遲約 183ms，在 2~5 m/s 環繞速度下僅造成 0.36~0.92m 偏移，可忽略。</blockquote>
+
+<h4>指令平滑（CMD Smooth Alpha）</h4>
+<p>對 VirtualStick 發送的 pitch/roll/yaw 指令做平滑處理，減少電機高頻震動。採用 cold-start 保護：首幀直接採用真實值，避免從零收斂的延遲。</p>
+<table>
+<tr><th>欄位</th><th>範圍</th><th>預設</th><th>說明</th></tr>
+<tr><td>指令平滑係數</td><td>0.3–0.8</td><td>0.5</td><td>越小 → 指令越平滑（電機動作更柔和）；越大 → 指令越即時（響應更快）</td></tr>
+</table>
+<div class="grid-2">
+<div class="card"><h4>🎬 影片級平滑</h4>0.3 — 拍攝穩定優先，電機動作最柔和</div>
+<div class="card"><h4>🕹️ 靈敏操控</h4>0.8 — 響應優先，適合有風環境快速修正</div>
+</div>
+<blockquote><strong>建議：</strong>預設值 0.5 在大多數場景下已經足夠。若發現環繞影片有輕微抖動，可嘗試降到 0.3~0.4。若在強風環境下感覺修正不夠即時，可提高到 0.6~0.7。</blockquote>
+
+<h3 id="s3-8">3.8 錄影格式設定</h3>
+<p>設定相機的錄影解析度、幀率與檔案格式。需已連線無人機才能調整。</p>
+
+<h4>錄影標準</h4>
+<table>
+<tr><th>標準</th><th>說明</th></tr>
+<tr><td>NTSC</td><td>30/60 fps 系統（台灣、美國、日本等）</td></tr>
+<tr><td>PAL</td><td>25/50 fps 系統（歐洲、中國大陸等）</td></tr>
+</table>
+
+<h4>支援的解析度與幀率</h4>
+<table>
+<tr><th>解析度</th><th>NTSC 幀率</th><th>PAL 幀率</th><th>適用場景</th></tr>
+<tr><td>3840×2160（4K）</td><td>30 / 60 fps</td><td>25 / 50 fps</td><td>最高畫質，風光大片、房地產</td></tr>
+<tr><td>2704×1520（2.7K）</td><td>30 / 60 fps</td><td>25 / 50 fps</td><td>平衡畫質與檔案大小</td></tr>
+<tr><td>1920×1080（1080p）</td><td>30 / 60 fps</td><td>25 / 50 fps</td><td>一般用途、節省儲存空間</td></tr>
+</table>
+
+<h4>錄影檔格式</h4>
+<table>
+<tr><th>格式</th><th>說明</th></tr>
+<tr><td>MP4</td><td>通用性最高，相容性最好（預設）</td></tr>
+<tr><td>MOV</td><td>Apple 生態系相容性佳，後製剪輯常用</td></tr>
+</table>
+<blockquote><strong>HUD 顯示：</strong>飛行中 HUD 左上角會顯示當前錄影格式（如 <code>4K30</code>、<code>1080p60</code>），方便確認。</blockquote>
+
+<!-- ==================== Section 4 ==================== -->
+<h2 id="s4">4. 任務模式總覽</h2>
+
+<h3>4.1 任務 A — 定點原地錄影 + 拍照</h3>
+<p><strong>用途：</strong>建物、地標定點環繞拍攝</p>
+<ol>
+<li>自動起飛 → 飛往目標座標</li>
+<li>360° 原地 yaw 旋轉錄影</li>
+<li>每 60° 拍一張（共 6 張）+ 俯視照 1 張（共 7 張）</li>
+<li>自動返航降落 → 自動下載照片</li>
+</ol>
+<p><strong>所需參數：</strong><code>target</code>（座標 + 高度）</p>
+
+<h3>4.2 任務 B — 環繞錄影</h3>
+<p><strong>用途：</strong>以指定半徑環繞目標錄影（鏡頭持續朝向中心）</p>
+<ol>
+<li>自動起飛 → 飛往目標座標（保持安全高度）</li>
+<li>飛至環繞起點（目標北方 orbitRadius 處）</li>
+<li>在環繞起點下降至環繞高度（避免在圓心下降時撞擊障礙物）</li>
+<li>順時針環繞 360° 錄影（鏡頭鎖定中心）</li>
+<li>停止錄影 → 自動返航降落</li>
+</ol>
+<p><strong>所需參數：</strong><code>target</code> + <code>orbit.radius &gt; 0</code></p>
+
+<h3>4.3 任務 C — 螺旋上升錄影</h3>
+<p><strong>用途：</strong>固定半徑螺旋上升，鏡頭持續鎖定中心（如繞塔上升）</p>
+<ol>
+<li>自動起飛 → 飛往目標座標（保持安全高度）</li>
+<li>飛至環繞起點（目標北方 orbitRadius 處）→ 在起點下降至起始高度</li>
+<li>螺旋上升 N 圈（Z_min → Z_max），鏡頭動態調整鎖定中心</li>
+<li>停止錄影 → 爬升至 target.alt → 自動返航降落</li>
+</ol>
+<p><strong>所需參數：</strong><code>target</code> + <code>orbit.radius ≥ 5</code> + <code>orbit.max_alt</code> + <code>orbit.turns</code>（3-10）</p>
+
+<h3>4.4 任務 D — 擴展螺旋上升錄影</h3>
+<p><strong>用途：</strong>半徑隨高度擴展的螺旋上升（如繞建築物上升同時拉遠）</p>
+<ol>
+<li>自動起飛 → 飛往目標座標（保持安全高度）</li>
+<li>飛至環繞起點（目標北方 rStart 處）→ 在起點下降至起始高度</li>
+<li>螺旋上升 N 圈，半徑從 radius 線性擴展至 radius_end</li>
+<li>停止錄影 → 爬升至 target.alt → 自動返航降落</li>
+</ol>
+<p><strong>所需參數：</strong><code>target</code> + <code>orbit.radius ≥ 5</code> + <code>orbit.radius_end &gt; radius</code> + <code>orbit.max_alt</code> + <code>orbit.turns</code>（3-10）</p>
+
+<h3>4.5 多站任務（Multi-Stop）</h3>
+<p><strong>用途：</strong>依序執行多個站點任務，站間不降落</p>
+<ol>
+<li>自動起飛 → 飛往站點 1 → 執行任務</li>
+<li>不降落 → 飛往站點 2 → 執行任務</li>
+<li>重複直到所有站點完成</li>
+<li>自動返航降落 → 統一下載所有照片</li>
+</ol>
+<p><strong>所需參數：</strong><code>stops</code> 陣列（至少 2 站）</p>
+
+<h3>速度倍率（C/D 模式）</h3>
+<table>
+<tr><th>orbit_speed</th><th>每圈時間</th><th>適用場景</th></tr>
+<tr><td>1.0（預設）</td><td>60 秒</td><td>優雅人像、房地產</td></tr>
+<tr><td>1.5</td><td>40 秒</td><td>動態內容、活動記錄</td></tr>
+<tr><td>2.0</td><td>30 秒</td><td>MV、舞蹈、運動</td></tr>
+</table>
+
+<!-- ==================== Section 5 ==================== -->
+<h2 id="s5">5. MQTT 完整 API 參考</h2>
+
+<h3>5.1 連線資訊</h3>
+<table>
+<tr><th>項目</th><th>值</th></tr>
+<tr><td>Broker</td><td><code>tcp://{host}:{port}</code>（預設 <code>tcp://broker.emqx.io:1883</code>）</td></tr>
+<tr><td>Client ID</td><td><code>DJI_App_{timestamp}</code>（每次連線自動產生）</td></tr>
+<tr><td>QoS</td><td>1（At least once）</td></tr>
+<tr><td>Keep Alive</td><td>20 秒</td></tr>
+<tr><td>自動重連</td><td>有（Paho 內建）</td></tr>
+</table>
+
+<h3>5.2 Topic 結構</h3>
+<p>所有 Topic 的 <code>{prefix}</code> 為 App 設定中的 Topic Prefix（預設 <code>example/DRONE-001</code>）。</p>
+<table>
+<tr><th>Topic</th><th>方向</th><th>說明</th></tr>
+<tr><td><code>{prefix}/command</code></td><td><span class="badge badge-in">後端 → App</span></td><td>飛行控制指令</td></tr>
+<tr><td><code>{prefix}/mission/start</code></td><td><span class="badge badge-in">後端 → App</span></td><td>單站任務指令</td></tr>
+<tr><td><code>{prefix}/mission/multi</code></td><td><span class="badge badge-in">後端 → App</span></td><td>多站任務指令</td></tr>
+<tr><td><code>{prefix}/status</code></td><td><span class="badge badge-out">App → 後端</span></td><td>飛機狀態回報</td></tr>
+<tr><td><code>{prefix}/ack</code></td><td><span class="badge badge-out">App → 後端</span></td><td>指令執行確認</td></tr>
+<tr><td><code>{prefix}/heartbeat</code></td><td><span class="badge badge-out">App → 後端</span></td><td>連線心跳（每 5 秒）</td></tr>
+</table>
+
+<h3>5.3 指令 Topic：<code>{prefix}/command</code></h3>
+<p>飛行控制的單一動作指令。</p>
+<p><strong>Payload 格式：</strong></p>
+<pre><code>{
+  "msg_id": "cmd_001",
+  "cmd": "takeoff | rtl | cancel | reset",
+  "timestamp": 1700000001000
+}</code></pre>
+<table>
+<tr><th>cmd 值</th><th>動作</th><th>前置條件</th></tr>
+<tr><td><code>takeoff</code></td><td>自動起飛</td><td>已連線、未起飛、狀態 IDLE</td></tr>
+<tr><td><code>rtl</code></td><td>自動返航</td><td>已連線</td></tr>
+<tr><td><code>cancel</code></td><td>取消任務並返航</td><td>任務執行中</td></tr>
+<tr><td><code>reset</code></td><td>重設狀態為 IDLE</td><td>狀態 ERROR 或 IDLE</td></tr>
+</table>
+<p><strong>範例：</strong></p>
+<pre><code># 起飛
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/command" \
+  -m '{"msg_id":"cmd_001","cmd":"takeoff","timestamp":1700000001000}'
+
+# 返航
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/command" \
+  -m '{"msg_id":"cmd_002","cmd":"rtl","timestamp":1700000002000}'
+
+# 取消任務
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/command" \
+  -m '{"msg_id":"cmd_003","cmd":"cancel","timestamp":1700000003000}'
+
+# 重設狀態
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/command" \
+  -m '{"msg_id":"cmd_004","cmd":"reset","timestamp":1700000004000}'</code></pre>
+
+<h3>5.4 任務 Topic：<code>{prefix}/mission/start</code></h3>
+<p>啟動單站任務。</p>
+<p><strong>Payload 格式：</strong></p>
+<pre><code>{
+  "msg_id": "msn_001",
+  "mission": "A | B | C | D",
+  "target": {
+    "lat": 25.0340,
+    "lng": 121.5645,
+    "alt": 10.0
+  },
+  "orbit": {
+    "radius": 10.0,
+    "alt": 8.0,
+    "gimbal_pitch": -45,
+    "photo_gimbal_pitch": -30,
+    "max_alt": 30.0,
+    "turns": 4,
+    "radius_end": 20.0,
+    "orbit_speed": 1.0
+  },
+  "photo_count": 7,
+  "timestamp": 1700000002000
+}</code></pre>
+
+<p><strong>orbit 參數說明：</strong></p>
+<table>
+<tr><th>欄位</th><th>型態</th><th>預設</th><th>說明</th></tr>
+<tr><td><code>radius</code></td><td>Double</td><td>0.0</td><td>環繞半徑（m），0 = 原地旋轉</td></tr>
+<tr><td><code>alt</code></td><td>Double?</td><td>null</td><td>環繞高度（m），null = 使用 target.alt</td></tr>
+<tr><td><code>gimbal_pitch</code></td><td>Double</td><td>-45.0</td><td>錄影時雲台角度（度）</td></tr>
+<tr><td><code>photo_gimbal_pitch</code></td><td>Double</td><td>-45.0</td><td>拍照時雲台角度（僅 A 模式）</td></tr>
+<tr><td><code>max_alt</code></td><td>Double?</td><td>null</td><td>螺旋結束高度（C/D 必填）</td></tr>
+<tr><td><code>turns</code></td><td>Int?</td><td>null</td><td>旋轉圈數 3-10（C/D 必填）</td></tr>
+<tr><td><code>radius_end</code></td><td>Double?</td><td>null</td><td>結束半徑（D 必填，須 &gt; radius）</td></tr>
+<tr><td><code>orbit_speed</code></td><td>Double</td><td>1.0</td><td>速度倍率 1.0-5.0（C/D 選填）</td></tr>
+</table>
+
+<p><strong>各模式必要參數：</strong></p>
+<table>
+<tr><th>模式</th><th>必要欄位</th><th>選填欄位</th></tr>
+<tr><td>A</td><td><code>target</code></td><td><code>orbit</code>（全部選填）、<code>photo_count</code></td></tr>
+<tr><td>B</td><td><code>target</code> + <code>orbit.radius &gt; 0</code></td><td><code>orbit.alt</code>、<code>orbit.gimbal_pitch</code></td></tr>
+<tr><td>C</td><td><code>target</code> + <code>orbit.radius ≥ 5</code> + <code>orbit.max_alt</code> + <code>orbit.turns</code></td><td><code>orbit.alt</code>、<code>orbit.orbit_speed</code></td></tr>
+<tr><td>D</td><td><code>target</code> + <code>orbit.radius ≥ 5</code> + <code>orbit.max_alt</code> + <code>orbit.turns</code> + <code>orbit.radius_end</code></td><td><code>orbit.alt</code>、<code>orbit.orbit_speed</code></td></tr>
+</table>
+
+<p><strong>範例：</strong></p>
+<pre><code># 任務 A（定點錄影 + 7 張拍照）
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/start" \
+  -m '{"msg_id":"msn_001","mission":"A","target":{"lat":25.0340,"lng":121.5645,"alt":10.0},"photo_count":7,"timestamp":1700000002000}'
+
+# 任務 A（錄影時雲台 -30°）
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/start" \
+  -m '{"msg_id":"msn_002","mission":"A","target":{"lat":25.0340,"lng":121.5645,"alt":10.0},"orbit":{"gimbal_pitch":-30},"timestamp":1700000002000}'
+
+# 任務 B（環繞半徑 5m，高度 8m，雲台 -60°）
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/start" \
+  -m '{"msg_id":"msn_003","mission":"B","target":{"lat":25.0340,"lng":121.5645,"alt":10.0},"orbit":{"radius":5.0,"alt":8.0,"gimbal_pitch":-60},"timestamp":1700000003000}'
+
+# 任務 C（螺旋上升，半徑 10m，從 3m 升到 30m，4 圈）
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/start" \
+  -m '{"msg_id":"msn_004","mission":"C","target":{"lat":25.0340,"lng":121.5645,"alt":3.0},"orbit":{"radius":10,"alt":3.0,"max_alt":30.0,"turns":4},"timestamp":1700000004000}'
+
+# 任務 C（快速螺旋，1.5x 速度）
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/start" \
+  -m '{"msg_id":"msn_005","mission":"C","target":{"lat":25.0340,"lng":121.5645,"alt":5.0},"orbit":{"radius":10,"alt":5.0,"max_alt":25.0,"turns":3,"orbit_speed":1.5},"timestamp":1700000005000}'
+
+# 任務 D（擴展螺旋，半徑 10m→20m，4 圈）
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/start" \
+  -m '{"msg_id":"msn_006","mission":"D","target":{"lat":25.0340,"lng":121.5645,"alt":3.0},"orbit":{"radius":10,"radius_end":20,"alt":3.0,"max_alt":30.0,"turns":4},"timestamp":1700000006000}'</code></pre>
+
+<h3>5.5 多站任務 Topic：<code>{prefix}/mission/multi</code></h3>
+<p>啟動多站任務。</p>
+<p><strong>Payload 格式：</strong></p>
+<pre><code>{
+  "msg_id": "msn_multi_001",
+  "stops": [
+    {
+      "mission": "A",
+      "target": { "lat": 25.0340, "lng": 121.5645, "alt": 15.0 },
+      "orbit": { "gimbal_pitch": -45, "photo_gimbal_pitch": -30 }
+    },
+    {
+      "mission": "B",
+      "target": { "lat": 25.0350, "lng": 121.5655, "alt": 20.0 },
+      "orbit": { "radius": 15.0, "alt": 15.0, "gimbal_pitch": -45 }
+    }
+  ],
+  "timestamp": 1700000002000
+}</code></pre>
+<p><strong>限制：</strong></p>
+<ul>
+<li><code>stops</code> 陣列至少 2 站，最多 10 站</li>
+<li>每站驗證規則同 <code>mission/start</code></li>
+<li>站間不降落，最後返航降落後統一下載照片</li>
+</ul>
+<p><strong>範例：</strong></p>
+<pre><code># A + B 兩站
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/multi" \
+  -m '{"msg_id":"msn_multi_001","stops":[{"mission":"A","target":{"lat":25.0340,"lng":121.5645,"alt":15.0}},{"mission":"B","target":{"lat":25.0350,"lng":121.5655,"alt":20.0},"orbit":{"radius":15.0}}],"timestamp":1700000002000}'
+
+# C + D 混合多站
+mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/mission/multi" \
+  -m '{"msg_id":"msn_multi_002","stops":[{"mission":"C","target":{"lat":25.0340,"lng":121.5645,"alt":5.0},"orbit":{"radius":10,"alt":5.0,"max_alt":25.0,"turns":3}},{"mission":"D","target":{"lat":25.0350,"lng":121.5655,"alt":5.0},"orbit":{"radius":8,"radius_end":20,"alt":5.0,"max_alt":30.0,"turns":4}}],"timestamp":1700000010000}'</code></pre>
+
+<h3>5.6 狀態回報 Topic：<code>{prefix}/status</code></h3>
+<p>App 主動發布飛機狀態。</p>
+<p><strong>發布時機：</strong></p>
+<ul>
+<li>飛行中：每 10 秒</li>
+<li>待機時：每 30 秒</li>
+<li>狀態切換時：即時觸發</li>
+<li>拍照進度：每拍一張立即回報</li>
+</ul>
+<p><strong>Payload 格式：</strong></p>
+<pre><code>{
+  "state": "IDLE | TAKING_OFF | FLYING_TO_TARGET | DESCENDING_TO_ORBIT_ALT | ORBITING | SPIRAL_ASCENDING | RECORDING_360 | SHOOTING_PHOTOS | FLYING_TO_NEXT | RETURNING_HOME | ERROR",
+  "lat": 25.0340,
+  "lng": 121.5645,
+  "alt": 28.5,
+  "battery": 84,
+  "heading": 180.5,
+  "gps_satellites": 15,
+  "reason": "",
+  "timestamp": 1700000003000
+}</code></pre>
+<p><strong>狀態值說明：</strong></p>
+<table>
+<tr><th>狀態值</th><th>說明</th></tr>
+<tr><td><code>IDLE</code></td><td>待機中</td></tr>
+<tr><td><code>TAKING_OFF</code></td><td>起飛中</td></tr>
+<tr><td><code>FLYING_TO_TARGET</code></td><td>飛往目標中</td></tr>
+<tr><td><code>DESCENDING_TO_ORBIT_ALT</code></td><td>降至環繞高度中</td></tr>
+<tr><td><code>ORBITING</code></td><td>B 模式環繞錄影中</td></tr>
+<tr><td><code>SPIRAL_ASCENDING</code></td><td>C/D 模式螺旋上升錄影中</td></tr>
+<tr><td><code>RECORDING_360</code></td><td>A 模式原地 360° 錄影中</td></tr>
+<tr><td><code>SHOOTING_PHOTOS</code></td><td>A 模式拍照中</td></tr>
+<tr><td><code>FLYING_TO_NEXT</code></td><td>Multi-Stop 飛往下一站中</td></tr>
+<tr><td><code>RETURNING_HOME</code></td><td>返航中</td></tr>
+<tr><td><code>ERROR</code></td><td>錯誤（需發送 <code>reset</code> 恢復）</td></tr>
+</table>
+<p><strong>特殊事件 Payload：</strong></p>
+<pre><code>{"state":"SHOOTING_PHOTOS","phase":"45deg","photo":3,"total":7}
+{"state":"SHOOTING_PHOTOS","phase":"nadir","photo":7,"total":7}
+{"state":"DOWNLOADING","message":"Downloading mission photos..."}
+{"state":"COMPLETE","photos":7}
+{"state":"IDLE","result":"success"}
+{"state":"ERROR","reason":"GPS signal too weak"}</code></pre>
+
+<h3>5.7 指令確認 Topic：<code>{prefix}/ack</code></h3>
+<p>每條指令執行後的確認回應。</p>
+<p><strong>Payload 格式：</strong></p>
+<pre><code>{
+  "msg_id": "cmd_001",
+  "action": "takeoff | rtl | cancel | reset | mission_start | multi_start",
+  "status": "accepted | success | failed",
+  "error_msg": "",
+  "timestamp": 1700000001500
+}</code></pre>
+<p><strong>status 值：</strong></p>
+<ul>
+<li><code>accepted</code> — 指令已接收，正在執行（僅 <code>takeoff</code>/<code>rtl</code>）</li>
+<li><code>success</code> — 執行成功</li>
+<li><code>failed</code> — 執行失敗（附 <code>error_msg</code>）</li>
+</ul>
+
+<h3>5.8 心跳 Topic：<code>{prefix}/heartbeat</code></h3>
+<p>每 5 秒發布，用於確認 App 在線。</p>
+<pre><code>{
+  "online": true,
+  "timestamp": 1700000005000
+}</code></pre>
+
+<h3>5.9 訂閱 App Topic（後端接收）</h3>
+<p>後端需訂閱以下 Topic 來接收 App 的回報：</p>
+<pre><code>mosquitto_sub -h broker.emqx.io \
+  -t "example/DRONE-001/status" \
+  -t "example/DRONE-001/ack" \
+  -t "example/DRONE-001/heartbeat"</code></pre>
+
+<!-- ==================== Section 6 ==================== -->
+<h2 id="s6">6. 安全機制與注意事項</h2>
+
+<h3>自動安全保護</h3>
+<table>
+<tr><th>機制</th><th>說明</th></tr>
+<tr><td>Flyaway 偵測</td><td>環繞時每 50 次迴圈檢查距離，超出半徑 2.5 倍自動停止</td></tr>
+<tr><td>電池監控</td><td>環繞每 90° 檢查電量，低於門檻自動返航</td></tr>
+<tr><td>Multi-Stop 電池預估</td><td>每站完成後預估剩餘電量，不夠返航時提前中止</td></tr>
+<tr><td>GPS 訊號檢查</td><td>衛星數 &lt; 8 或訊號 &lt; LEVEL_3 時拒絕起飛</td></tr>
+<tr><td>距離限制</td><td>目標超出安全半徑（1000m）時拒絕執行</td></tr>
+<tr><td>任務超時</td><td>環繞 3 分鐘、螺旋 10 分鐘超時自動停止</td></tr>
+<tr><td>ERROR 自動重置</td><td>進入 ERROR 狀態 90 秒後自動重設為 IDLE</td></tr>
+</table>
+
+<h3>操作注意事項</h3>
+<ol>
+<li><strong>同一時間只能執行一個任務</strong>，新指令會被拒絕</li>
+<li><strong><code>msg_id</code> 去重</strong>，同一 <code>msg_id</code> 只處理一次（快取 200 筆）</li>
+<li><strong>座標系統</strong>：所有 GPS 座標使用 WGS84，高度為相對起飛點高度</li>
+<li><strong>返航高度</strong>：App 會先爬升到 target.alt 再呼叫 RTH，但 DJI 飛控會自動爬升到 RTH_HEIGHT（30m）</li>
+<li><strong>照片下載</strong>：任務完成後自動等待 6 秒開始下載，下載期間啟動新任務可能衝突</li>
+<li><strong>B/C/D 模式僅錄影不拍照</strong>，不觸發照片下載</li>
+</ol>
+
+<!-- ==================== Section 7 ==================== -->
+<h2 id="s7">7. 疑難排解</h2>
+
+<h3>MQTT 連線失敗</h3>
+<ul>
+<li>確認 Broker 位址與連接埠正確</li>
+<li>確認手機網路可連線（測試 Broker 需要外網）</li>
+<li>儲存設定後需重新連線（關閉 App 重開）</li>
+</ul>
+
+<h3>任務被拒絕執行</h3>
+<table>
+<tr><th>錯誤訊息</th><th>原因</th><th>解決方式</th></tr>
+<tr><td><code>Mission already in progress</code></td><td>有任務正在執行</td><td>等任務完成或發送 <code>cancel</code></td></tr>
+<tr><td><code>GPS signal too weak</code></td><td>GPS 衛星不足</td><td>移到空曠處等待定位</td></tr>
+<tr><td><code>Target exceeds safe radius</code></td><td>目標超出 1000m</td><td>縮短目標距離或調整限制</td></tr>
+<tr><td><code>Mission B requires orbit block</code></td><td>B 模式未提供 orbit</td><td>加入 <code>orbit.radius &gt; 0</code></td></tr>
+<tr><td><code>Mission D: radius_end must be &gt; radius</code></td><td>D 模式半徑設定錯誤</td><td>確保 <code>radius_end &gt; radius</code></td></tr>
+</table>
+
+<h3>環繞拍攝圓心偏移</h3>
+<ul>
+<li>檢查磁偏角設定是否正確（出國飛行時特別重要）</li>
+<li>確認 GPS 訊號良好（衛星數 ≥ 12）</li>
+<li>嘗試降低 GPS 濾波係數（如 0.2~0.3）加強座標平滑</li>
+<li>嘗試降低指令平滑係數（如 0.3~0.4）減少電機震動</li>
+<li>避免在磁干擾環境飛行（建築物、電塔附近）</li>
+</ul>
+
+<h3>狀態卡在 ERROR</h3>
+<p>發送 <code>reset</code> 指令恢復：</p>
+<pre><code>mosquitto_pub -h broker.emqx.io -t "example/DRONE-001/command" \
+  -m '{"msg_id":"cmd_reset","cmd":"reset","timestamp":1700000009000}'</code></pre>
+
+</div>
+</body>
+</html>

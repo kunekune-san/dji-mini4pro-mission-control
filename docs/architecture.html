@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJI Mini 4 Pro 任務控制系統 — 架構說明文件</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1558b0;
+            --accent: #ff6d00;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #202124;
+            --text-light: #5f6368;
+            --border: #dadce0;
+            --success: #0d904f;
+            --warning: #e37400;
+            --danger: #d93025;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* Navigation */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            overflow-y: auto;
+            z-index: 100;
+            padding: 20px 0;
+        }
+
+        .sidebar h2 {
+            color: #fff;
+            font-size: 16px;
+            padding: 0 20px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+        }
+
+        .sidebar .version {
+            color: #888;
+            font-size: 12px;
+            padding: 0 20px;
+            margin-bottom: 15px;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 8px 20px;
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .sidebar nav a:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .sidebar nav a.section-title {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 15px;
+            padding-bottom: 5px;
+        }
+
+        .sidebar nav a.indent { padding-left: 36px; font-size: 13px; }
+
+        /* Main Content */
+        .main {
+            margin-left: 280px;
+            padding: 40px 60px;
+            max-width: 1100px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 8px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 12px;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-top: 50px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h3 {
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 30px;
+            margin-bottom: 12px;
+        }
+
+        h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        p { margin-bottom: 12px; }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .card-header .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .card-header .icon.blue { background: var(--primary); }
+        .card-header .icon.orange { background: var(--accent); }
+        .card-header .icon.green { background: var(--success); }
+        .card-header .icon.red { background: var(--danger); }
+        .card-header .icon.purple { background: #7c3aed; }
+
+        .card-header h3 { margin: 0; font-size: 18px; }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        thead th {
+            background: #f1f3f4;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text);
+            border-bottom: 2px solid var(--border);
+        }
+
+        tbody td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tbody tr:hover { background: #f8f9fa; }
+
+        /* Code */
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            color: #d93025;
+        }
+
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .comment { color: #6a9955; }
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .type { color: #4ec9b0; }
+        .number { color: #b5cea8; }
+
+        /* Diagrams */
+        .diagram {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-blue { background: #e8f0fe; color: var(--primary); }
+        .badge-green { background: #e6f4ea; color: var(--success); }
+        .badge-orange { background: #fef7e0; color: var(--warning); }
+        .badge-red { background: #fce8e6; color: var(--danger); }
+        .badge-purple { background: #f3e8fd; color: #7c3aed; }
+
+        /* Flow diagram */
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+        }
+
+        .flow-box {
+            background: var(--card);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .flow-box.highlight {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .flow-box.warning {
+            border-color: var(--warning);
+            background: #fff8e1;
+        }
+
+        .flow-box.danger {
+            border-color: var(--danger);
+            background: #fce8e6;
+        }
+
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Alert boxes */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-info { background: #e8f0fe; border-left: 4px solid var(--primary); }
+        .alert-warning { background: #fef7e0; border-left: 4px solid var(--warning); }
+        .alert-danger { background: #fce8e6; border-left: 4px solid var(--danger); }
+        .alert-success { background: #e6f4ea; border-left: 4px solid var(--success); }
+
+        /* TOC */
+        .toc {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 30px;
+        }
+
+        .toc h3 { margin-top: 0; font-size: 16px; }
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { padding: 3px 0; }
+        .toc a { color: var(--primary); text-decoration: none; font-size: 14px; }
+        .toc a:hover { text-decoration: underline; }
+
+        /* File tree */
+        .file-tree {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+
+        .file-tree .folder { color: #64b5f6; }
+        .file-tree .file { color: #a5d6a7; }
+        .file-tree .desc { color: #888; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 20px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        /* Print */
+        @media print {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+    <h2>🏗️ 架構說明</h2>
+    <div class="version">v3.2 | 2026-08-11</div>
+    <nav>
+        <a href="#overview" class="section-title">系統概述</a>
+        <a href="#overview" class="indent">系統定位</a>
+        <a href="#tech-stack" class="indent">技術棧</a>
+        <a href="#architecture" class="indent">高層架構</a>
+
+        <a href="#modules" class="section-title">模組架構</a>
+        <a href="#mod-dji" class="indent">DJI 硬體抽象層</a>
+        <a href="#mod-mission" class="indent">任務控制層</a>
+        <a href="#mod-mqtt" class="indent">MQTT 通訊層</a>
+        <a href="#mod-safety" class="indent">安全監控層</a>
+        <a href="#mod-ui" class="indent">UI 層</a>
+
+        <a href="#state-machine" class="section-title">狀態機設計</a>
+        <a href="#state-diagram" class="indent">狀態轉換圖</a>
+        <a href="#state-details" class="indent">狀態詳細說明</a>
+        <a href="#state-guards" class="indent">安全守衛機制</a>
+
+        <a href="#data-flow" class="section-title">資料流</a>
+        <a href="#mqtt-flow" class="indent">MQTT 指令流</a>
+        <a href="#telemetry-flow" class="indent">遙測資料流</a>
+
+        <a href="#algorithms" class="section-title">核心演算法</a>
+        <a href="#algo-flight" class="indent">飛行控制</a>
+        <a href="#algo-orbit" class="indent">環繞控制</a>
+        <a href="#algo-spiral" class="indent">螺旋上升</a>
+
+        <a href="#concurrency" class="section-title">並發設計</a>
+        <a href="#thread-model" class="indent">線程模型</a>
+        <a href="#atomic-ops" class="indent">原子操作</a>
+
+        <a href="#file-map" class="section-title">檔案地圖</a>
+    </nav>
+</aside>
+
+<!-- Main Content -->
+<div class="main">
+
+<h1>DJI Mini 4 Pro 任務控制系統</h1>
+<p class="subtitle">架構說明文件 — 給工程師的系統設計全覽</p>
+
+<div class="toc">
+    <h3>📑 目錄</h3>
+    <ul>
+        <li><a href="#overview">1. 系統概述</a></li>
+        <li><a href="#modules">2. 模組架構</a></li>
+        <li><a href="#state-machine">3. 狀態機設計</a></li>
+        <li><a href="#data-flow">4. 資料流</a></li>
+        <li><a href="#algorithms">5. 核心演算法</a></li>
+        <li><a href="#concurrency">6. 並發設計</a></li>
+        <li><a href="#file-map">7. 檔案地圖</a></li>
+    </ul>
+</div>
+
+<!-- ==================== 1. 系統概述 ==================== -->
+<h2 id="overview">1. 系統概述</h2>
+
+<div class="card">
+    <div class="card-header">
+        <div class="icon blue">🎯</div>
+        <h3>系統定位</h3>
+    </div>
+    <p>本系統是一套基於 DJI MSDK v5 的 Android 應用程式，用於控制 DJI Mini 4 Pro 無人機執行<strong>自動化拍攝任務</strong>。後端透過 MQTT 協定發送任務指令，App 自動完成起飛、飛行、環繞錄影、多角度拍照、返航降落等全流程。</p>
+    <div class="grid-3" style="margin-top:16px">
+        <div style="text-align:center">
+            <div style="font-size:28px">🚁</div>
+            <strong>無人機</strong><br>
+            <span style="font-size:13px;color:var(--text-light)">DJI Mini 4 Pro<br>RC-N2 遙控器</span>
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:28px">📱</div>
+            <strong>Android App</strong><br>
+            <span style="font-size:13px;color:var(--text-light)">MSDK v5<br>任務控制核心</span>
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:28px">☁️</div>
+            <strong>後端系統</strong><br>
+            <span style="font-size:13px;color:var(--text-light)">MQTT Broker<br>任務下達 + 狀態監控</span>
+        </div>
+    </div>
+</div>
+
+<h3 id="tech-stack">技術棧</h3>
+<table>
+    <thead>
+        <tr><th>層級</th><th>技術</th><th>版本</th><th>用途</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>語言</td><td>Kotlin</td><td>1.9+</td><td>主要開發語言</td></tr>
+        <tr><td>平台</td><td>Android</td><td>API 26+</td><td>最低支援版本</td></tr>
+        <tr><td>SDK</td><td>DJI MSDK v5</td><td>5.18.0</td><td>無人機控制</td></tr>
+        <tr><td>非同步</td><td>Kotlin Coroutines</td><td>1.7+</td><td>任務流程控制</td></tr>
+        <tr><td>狀態管理</td><td>StateFlow</td><td>—</td><td>響應式 UI 更新</td></tr>
+        <tr><td>MQTT</td><td>Eclipse Paho</td><td>1.2+</td><td>後端通訊</td></tr>
+        <tr><td>建構</td><td>Gradle</td><td>8.12</td><td>依賴管理與建構</td></tr>
+    </tbody>
+</table>
+
+<h3 id="architecture">高層架構圖</h3>
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│                         後端系統 (MQTT Broker)                       │
+│                    broker.emqx.io:1883 (測試用)                      │
+└───────────────┬──────────────────────────────────┬──────────────────┘
+                │  /command, /mission/start,        │  /status,
+                │  /mission/multi                   │  /ack, /heartbeat
+                ▼                                  ▲
+┌─────────────────────────────────────────────────────────────────────┐
+│                        MQTT 通訊層 (mqtt/)                          │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
+│  │ MqttClientManager │  │ MqttMissionBridge │  │ MqttStatusReporter│  │
+│  │ 連線/訂閱/發布    │  │ 指令→任務轉換     │  │ 狀態回報+心跳     │  │
+│  └────────┬─────────┘  └────────┬─────────┘  └──────────────────┘  │
+└───────────┼─────────────────────┼──────────────────────────────────┘
+            │                     │
+            ▼                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    任務控制層 (mission/)                             │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
+│  │MissionStateMachine│  │ FlightPhaseExecutor│  │  OrbitController  │  │
+│  │ 狀態機 + 生命週期  │  │ 起飛/爬升/飛行    │  │ A/B/C/D 環繞控制 │  │
+│  └────────┬─────────┘  └──────────────────┘  └──────────────────┘  │
+│           │            ┌──────────────────┐  ┌──────────────────┐  │
+│           ├───────────▶│PhotoSequenceCtrl  │  │VirtualStickCtrl  │  │
+│           │            │ 拍照序列控制       │  │ VS 啟用/停用      │  │
+│           │            └──────────────────┘  └──────────────────┘  │
+└───────────┼────────────────────────────────────────────────────────┘
+            │
+            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     DJI 硬體抽象層 (dji/)                           │
+│  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐          │
+│  │  FlightManager  │ │  CameraManager  │ │  GimbalManager  │         │
+│  │ 飛行狀態 StateFlow│ │ 拍照/錄影/對焦  │ │ 雲台角度控制     │         │
+│  └────────────────┘ └────────────────┘ └────────────────┘          │
+│  ┌────────────────────┐  ┌────────────────────────────────────┐    │
+│  │MediaDownloadManager │  │          DJI MSDK v5               │    │
+│  │ 串流下載照片        │  │     KeyManager + VirtualStick      │    │
+│  └────────────────────┘  └────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                        安全監控層 (safety/)                          │
+│  ┌──────────────────┐  ┌──────────────────┐                         │
+│  │ SafetyEventLogger │  │SafetyAnomalyType │                        │
+│  │ CSV 事件記錄      │  │ 異常類型列舉      │                         │
+│  └──────────────────┘  └──────────────────┘                         │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                           UI 層                                     │
+│  ┌────────────────┐ ┌──────────────────┐ ┌────────────────────┐    │
+│  │  DJIMainActivity│ │ SettingsActivity  │ │MissionControlActivity│   │
+│  │  主畫面入口     │ │ 設定頁面          │ │ FPV + HUD 儀表板    │    │
+│  └────────────────┘ └──────────────────┘ └────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────┘
+</div>
+
+<!-- ==================== 2. 模組架構 ==================== -->
+<h2 id="modules">2. 模組架構</h2>
+
+<h3 id="mod-dji">2.1 DJI 硬體抽象層（dji/）</h3>
+<p>封裝所有 DJI MSDK v5 的 KeyManager 操作，提供簡潔的 Kotlin API 給上層使用。</p>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <div class="icon blue">✈️</div>
+            <h3>FlightManager</h3>
+        </div>
+        <p><code>object</code> | 飛行狀態的核心提供者</p>
+        <table>
+            <thead><tr><th>StateFlow</th><th>型態</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr><td><code>isConnected</code></td><td>Boolean</td><td>飛控連線狀態</td></tr>
+                <tr><td><code>isFlying</code></td><td>Boolean</td><td>是否在空中</td></tr>
+                <tr><td><code>altitude</code></td><td>Double</td><td>相對高度 (m)</td></tr>
+                <tr><td><code>distanceFromHome</code></td><td>Double</td><td>與 Home 距離 (m)</td></tr>
+                <tr><td><code>batteryPercent</code></td><td>Int</td><td>電池電量 (%)</td></tr>
+                <tr><td><code>currentLat/Lng</code></td><td>Double?</td><td>GPS 座標</td></tr>
+                <tr><td><code>heading</code></td><td>Double</td><td>機頭朝向 (°)</td></tr>
+                <tr><td><code>gpsSatellites</code></td><td>Int?</td><td>衛星數量</td></tr>
+                <tr><td><code>gpsSignalLevel</code></td><td>Int?</td><td>訊號等級 0-5</td></tr>
+            </tbody>
+        </table>
+        <p><strong>關鍵方法：</strong></p>
+        <ul>
+            <li><code>takeOff(callback)</code> — 自動起飛</li>
+            <li><code>land(callback)</code> — 自動降落</li>
+            <li><code>startRTH(callback)</code> — 返航</li>
+            <li><code>getCurrentLocation()</code> — GPS 座標（快取）</li>
+            <li><code>getFilteredLocation()</code> — EMA 濾波座標</li>
+            <li><code>isGpsReadyForMission()</code> — GPS 就緒檢查</li>
+            <li><code>writeSafetyParameters()</code> — 寫入安全限制</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="icon green">📷</div>
+            <h3>CameraManager</h3>
+        </div>
+        <p><code>object</code> | 相機操作封裝</p>
+        <ul>
+            <li><code>takePhoto()</code> — 拍照（suspend）</li>
+            <li><code>startVideoRecord()</code> — 開始錄影（suspend）</li>
+            <li><code>stopVideoRecord()</code> — 停止錄影（suspend）</li>
+            <li><code>triggerAutoFocus()</code> — 觸發自動對焦</li>
+            <li><code>setCameraMode(mode)</code> — 切換拍照/錄影模式</li>
+        </ul>
+        <p style="margin-top:12px"><span class="badge badge-orange">注意</span> 內建 <code>isBusy</code> AtomicBoolean 防止併發操作</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="icon purple">🎮</div>
+            <h3>GimbalManager</h3>
+        </div>
+        <p><code>object</code> | 雲台角度控制</p>
+        <ul>
+            <li><code>setPitchAngle(degrees)</code> — 設定俯仰角（suspend）</li>
+            <li><code>waitForPitchReady(target, tolerance)</code> — 等待雲台到位</li>
+            <li><code>resetGimbal()</code> — 重置雲台水平</li>
+        </ul>
+        <p style="margin-top:12px"><span class="badge badge-blue">超時</span> 10 秒超時保護，防止 SDK callback 遺失</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="icon orange">📥</div>
+            <h3>MediaDownloadManager</h3>
+        </div>
+        <p><code>object</code> | 媒體檔案下載</p>
+        <ul>
+            <li><code>downloadLastNPhotos(n)</code> — 下載最近 N 張照片</li>
+            <li><code>downloadFileStreaming()</code> — 串流寫入 MediaStore</li>
+            <li><code>enableMediaMode() / disableMediaMode()</code> — 切換媒體模式</li>
+        </ul>
+        <p style="margin-top:12px"><span class="badge badge-green">優化</span> 串流寫入避免 OOM，每張 60 秒超時</p>
+    </div>
+</div>
+
+<h3 id="mod-mission">2.2 任務控制層（mission/）</h3>
+
+<div class="card">
+    <div class="card-header">
+        <div class="icon red">⚡</div>
+        <h3>MissionStateMachine — 任務狀態機（核心）</h3>
+    </div>
+    <p>整個系統的「大腦」，管理任務的完整生命週期。使用 Kotlin Coroutines 驅動，透過 StateFlow 對外暴露狀態。</p>
+    <pre><code><span class="keyword">object</span> <span class="type">MissionStateMachine</span> {
+    <span class="keyword">enum class</span> <span class="type">MissionState</span> {
+        IDLE, TAKING_OFF, FLYING_TO_TARGET,
+        DESCENDING_TO_ORBIT_ALT, ORBITING, SPIRAL_ASCENDING,
+        RECORDING_360, SHOOTING_PHOTOS, FLYING_TO_NEXT,
+        RETURNING_HOME, ERROR
+    }
+
+    <span class="keyword">val</span> state: <span class="type">StateFlow</span>&lt;<span class="type">MissionState</span>&gt;  <span class="comment">// 對外暴露的狀態流</span>
+
+    <span class="keyword">suspend fun</span> startMission(payload)   <span class="comment">// 啟動單站任務</span>
+    <span class="keyword">suspend fun</span> startMultiMission(payload) <span class="comment">// 啟動多站任務</span>
+    <span class="keyword">fun</span> cancelMission(reason: String?)   <span class="comment">// 取消任務（安全返航，記錄原因）</span>
+    <span class="keyword">fun</span> isDroneOnGround(): Boolean       <span class="comment">// 三重安全檢查：!isFlying && !isMotorsOn && alt&lt;1.0</span>
+    <span class="keyword">fun</span> setupSafetyMonitoring(logger)    <span class="comment">// 啟動 GPS/電池異常監控</span>
+}</code></pre>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <div class="icon blue">🛫</div>
+            <h3>FlightPhaseExecutor</h3>
+        </div>
+        <p><code>internal object</code> | 飛行階段執行器</p>
+        <ul>
+            <li><code>performTakeoff()</code> — 起飛（含重試 + 穩定等待）</li>
+            <li><code>climbToAltitude()</code> — 爬升到指定高度</li>
+            <li><code>flyToTarget()</code> — 飛往目標座標</li>
+            <li><code>descendToAltitude()</code> — 下降到環繞高度</li>
+            <li><code>rotateYawForPhoto()</code> — Yaw 旋轉拍照</li>
+            <li><code>estimateRemainingFlightBattery()</code> — 電量預估</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="icon purple">🔄</div>
+            <h3>OrbitController</h3>
+        </div>
+        <p><code>internal object</code> | 環繞飛行控制</p>
+        <ul>
+            <li><code>executeInPlaceRotation()</code> — A 模式原地旋轉錄影</li>
+            <li><code>executeOrbitPhase()</code> — B 模式環繞錄影</li>
+            <li><code>executeSpiralAscent()</code> — C 模式螺旋上升錄影（固定半徑）</li>
+            <li><code>executeExpandingSpiral()</code> — D 模式擴展螺旋上升錄影（半徑線性增長）</li>
+        </ul>
+        <p style="margin-top:8px"><strong>控制演算法：</strong></p>
+        <ul>
+            <li>水平：切線速度 + PD 徑向修正 + D 模式徑向擴展</li>
+            <li>Yaw：PI 閉迴路 + bearingRate 前饋 + 視覺輔助修正</li>
+            <li>垂直：基礎爬升率 + P 微調（高度-角度綁定）</li>
+            <li>雲台：動態俯仰角 + 高度分段修正係數（5~50m）</li>
+            <li>平滑：EMA 低通濾波（pitch/roll/yaw 獨立 alpha）</li>
+        </ul>
+    </div>
+</div>
+
+<div class="grid-3">
+    <div class="card" style="padding:16px">
+        <h4 style="margin-top:0">PhotoSequenceController</h4>
+        <p style="font-size:13px"><code>internal object</code><br>管理多角度拍照序列（每 60° 一張 + 天底一張）</p>
+    </div>
+    <div class="card" style="padding:16px">
+        <h4 style="margin-top:0">VirtualStickController</h4>
+        <p style="font-size:13px"><code>internal object</code><br>VS 啟用/停用，含重試機制與狀態監聽</p>
+    </div>
+    <div class="card" style="padding:16px">
+        <h4 style="margin-top:0">VirtualStickParams</h4>
+        <p style="font-size:13px"><code>internal object</code><br>VS 參數工廠，建立預設的控制參數物件</p>
+    </div>
+</div>
+
+<div class="grid-3">
+    <div class="card" style="padding:16px">
+        <h4 style="margin-top:0">OrbitModeA / B / C / D</h4>
+        <p style="font-size:13px"><code>internal object</code><br>各模式實際實作：A 原地旋轉、B 環繞、C 螺旋上升、D 擴展螺旋（OrbitController 依 mission 分派）</p>
+    </div>
+    <div class="card" style="padding:16px">
+        <h4 style="margin-top:0">OrbitHelpers</h4>
+        <p style="font-size:13px"><code>internal object</code><br>環繞共用邏輯：視覺預選取、平滑參數、座標計算</p>
+    </div>
+    <div class="card" style="padding:16px">
+        <h4 style="margin-top:0">VisualYawAssist</h4>
+        <p style="font-size:13px"><code>internal object</code><br>視覺輔助 Yaw 追蹤（模板匹配）</p>
+    </div>
+</div>
+
+<h3 id="mod-mqtt">2.3 MQTT 通訊層（mqtt/）</h3>
+
+<div class="card">
+    <div class="card-header">
+        <div class="icon green">📡</div>
+        <h3>MQTT 通訊架構</h3>
+    </div>
+    <div class="diagram">
+後端 ──→ /command ──→ MqttClientManager ──→ MqttMissionBridge ──→ MissionStateMachine
+                      (訂閱/去重/重連)      (指令驗證/轉換)        (任務執行)
+
+後端 ←── /status ──── MqttStatusReporter ←── FlightManager StateFlow
+後端 ←── /ack ─────── MqttMissionBridge (每條指令的執行結果)
+後端 ←── /heartbeat ── MqttStatusReporter (每 5 秒)
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h4>MqttClientManager</h4>
+        <p><code>object</code> | MQTT 連線管理</p>
+        <ul>
+            <li>自動重連（watchdog 每 10 秒檢查）</li>
+            <li>LRU 指令去重（500 條上限，淘汰最舊 200 條）</li>
+            <li>Thread-safe：AtomicBoolean + @Volatile</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h4>MqttMissionBridge</h4>
+        <p><code>object</code> | 指令 → 任務轉換</p>
+        <ul>
+            <li>Payload 解析 → <strong>MissionValidator 集中驗證</strong>（進任務狀態機前攔截）</li>
+            <li>任務狀態檢查（僅 IDLE 可啟動新任務）</li>
+            <li>距離預檢（GeoMath，GPS 就緒時）</li>
+            <li>兩階段 ACK（accepted → success/failed）</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="icon orange">🛂</div>
+        <h3>MissionValidator — 任務 payload 集中驗證</h3>
+    </div>
+    <p>統一收攏所有 mission payload 的驗證規則，消除 <code>handleMissionStart()</code> 與 <code>handleMultiStart()</code> 之間的重複驗證邏輯。每個規則函式回傳 <code>null</code> = 通過，回傳 <code>String</code> = 錯誤訊息（可直接回給後端 ack）。</p>
+    <table>
+        <thead><tr><th>規則</th><th>檢查內容</th><th>適用模式</th></tr></thead>
+        <tbody>
+            <tr><td><code>validateMissionType</code></td><td>mission 必須為 A/B/C/D</td><td>全部</td></tr>
+            <tr><td><code>validateTarget</code></td><td>lat ±90、lng ±180、alt 0~maxAlt</td><td>全部</td></tr>
+            <tr><td><code>validatePhotoCount</code></td><td>photo_count 2~20</td><td>全部</td></tr>
+            <tr><td><code>validateOrbitParams</code></td><td>alt 範圍、radius ≤ 1000m、gimbal_pitch -130~45、orbit_speed 1~5</td><td>全部（有 orbit 時）</td></tr>
+            <tr><td><code>validateMissionB</code></td><td>必須有 orbit 且 radius &gt; 0</td><td>B</td></tr>
+            <tr><td><code>validateMissionC</code></td><td>radius ≥ 5m、max_alt &gt; 0、turns 3~10</td><td>C</td></tr>
+            <tr><td><code>validateMissionD</code></td><td>C 全部規則 + radius_end &gt; radius、final_heading 0~360°</td><td>D</td></tr>
+            <tr><td><code>validateSingleMission</code> / <code>validateStop</code></td><td>組合入口，一次跑完全部相關規則</td><td>單站 / 多站</td></tr>
+        </tbody>
+    </table>
+    <div class="alert alert-info">
+        <strong>設計原則：</strong>驗證在進入 <code>MissionStateMachine</code> 之前完成，失敗即 <code>publishErrorAck</code> 拒絕執行，不碰無人機。純 Kotlin、零 Android/DJI 依賴，可搭配 <code>MissionValidatorTest.kt</code> 單元測試直接驗證規則正確性。
+    </div>
+</div>
+
+<h4>Topic 結構</h4>
+<table>
+    <thead><tr><th>Topic</th><th>方向</th><th>說明</th><th>頻率</th></tr></thead>
+    <tbody>
+        <tr><td><code>{prefix}/command</code></td><td>後端 → App</td><td>飛行指令（takeoff/rtl/cancel/reset）</td><td>—</td></tr>
+        <tr><td><code>{prefix}/mission/start</code></td><td>後端 → App</td><td>單站任務指令</td><td>—</td></tr>
+        <tr><td><code>{prefix}/mission/multi</code></td><td>後端 → App</td><td>多站任務指令</td><td>—</td></tr>
+        <tr><td><code>{prefix}/status</code></td><td>App → 後端</td><td>飛行狀態回報</td><td>飛行 10s / 待機 30s</td></tr>
+        <tr><td><code>{prefix}/ack</code></td><td>App → 後端</td><td>指令執行結果</td><td>每條指令</td></tr>
+        <tr><td><code>{prefix}/heartbeat</code></td><td>App → 後端</td><td>連線心跳</td><td>每 5 秒</td></tr>
+    </tbody>
+</table>
+
+<h3 id="mod-safety">2.4 安全監控層（safety/）</h3>
+<div class="card">
+    <div class="card-header">
+        <div class="icon red">🛡️</div>
+        <h3>SafetyEventLogger</h3>
+    </div>
+    <p>記錄所有安全相關事件到本地 CSV 檔案，用於事後分析。</p>
+    <table>
+        <thead><tr><th>異常類型</th><th>觸發條件</th><th>處置</th></tr></thead>
+        <tbody>
+            <tr><td><code>LOW_BATTERY_RTH</code></td><td>電池 ≤ 50%</td><td>記錄座標，MQTT 通知後端</td></tr>
+            <tr><td><code>BATTERY_FORCED_LAND</code></td><td>電池 ≤ 25%</td><td>取消任務，禁用 VS（不發 RTH）</td></tr>
+            <tr><td><code>GPS_SIGNAL_WEAK</code></td><td>GPS < Level 3（連續 3 次確認）</td><td>記錄座標，10 秒防抖後觸發 ERROR</td></tr>
+            <tr><td><code>GPS_SIGNAL_LOST</code></td><td>GPS < Level 3 且衛星 < 5</td><td>立即觸發 ERROR</td></tr>
+            <tr><td><code>FIRMWARE_RTH</code></td><td>韌體觸發自動返航</td><td>記錄事件，通知後端</td></tr>
+        </tbody>
+    </table>
+    <div class="alert alert-info">
+        <strong>GPS 連續確認：</strong>GPS 異常偵測使用 <code>GPS_ANOMALY_CONFIRM_COUNT = 3</code>，需要連續 3 次低訊號讀數才觸發，避免瞬間 GPS 跳動造成誤判。
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="icon red">📡</div>
+        <h3>MissionSafetyMonitor — 安全異常監控（mission/）</h3>
+    </div>
+    <p>任務執行期間的即時安全監控器，偵測 GPS / 電池 / 韌體 RTH 異常並觸發對應處置。事件透過 <code>SafetyEventLogger</code> 寫入 CSV。</p>
+    <table>
+        <thead><tr><th>方法</th><th>用途</th></tr></thead>
+        <tbody>
+            <tr><td><code>setup(logger)</code></td><td>啟動監控，綁定 SafetyEventLogger</td></tr>
+            <tr><td><code>handleSafetyAnomaly(type)</code></td><td>處理安全異常（suspend）</td></tr>
+            <tr><td><code>logEvent(type, reason, payload)</code></td><td>記錄事件並可發送 MQTT</td></tr>
+            <tr><td><code>resetGpsWeakTimer()</code></td><td>重置 GPS 弱訊號防抖計時器</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h3 id="mod-ui">2.5 UI 層</h3>
+<table>
+    <thead><tr><th>Activity</th><th>功能</th><th>特色</th></tr></thead>
+    <tbody>
+        <tr><td><code>DJIMainActivity</code></td><td>主畫面，App 入口</td><td>SDK 初始化、遙測數據顯示、權限管理</td></tr>
+        <tr><td><code>SettingsActivity</code></td><td>設定頁面</td><td>MQTT、飛行限制、速度、電池門檻、RC 模式</td></tr>
+        <tr><td><code>MissionControlActivity</code></td><td>全螢幕 FPV + HUD</td><td>橫向鎖定、即時儀表板、任務取消按鈕</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 3. 狀態機設計 ==================== -->
+<h2 id="state-machine">3. 狀態機設計</h2>
+
+<h3 id="state-diagram">狀態轉換圖</h3>
+<div class="card">
+    <h4>任務 A（原地旋轉 + 拍照）</h4>
+    <div class="diagram">
+IDLE ──→ TAKING_OFF ──→ FLYING_TO_TARGET ──→ [DESCENDING_TO_ORBIT_ALT] ──→ RECORDING_360
+  ▲                                                                    │
+  │                                                                    ▼
+  └──────────────────── RETURNING_HOME ←── SHOOTING_PHOTOS ←───────────┘
+
+[DESCENDING_TO_ORBIT_ALT]：僅當 orbit.alt < 當前高度時觸發
+    </div>
+
+    <h4>任務 B（環繞錄影）</h4>
+    <div class="diagram">
+IDLE ──→ TAKING_OFF ──→ FLYING_TO_TARGET ──→ DESCENDING_TO_ORBIT_ALT ──→ ORBITING
+  ▲                                                                  │
+  │                                                                  ▼
+  └──────────────────── RETURNING_HOME ←─────────────────────────────┘
+    </div>
+
+    <h4>任務 C（螺旋上升）</h4>
+    <div class="diagram">
+IDLE ──→ TAKING_OFF ──→ FLYING_TO_TARGET ──→ DESCENDING_TO_ORBIT_ALT ──→ SPIRAL_ASCENDING
+  ▲                                                                  │
+  │                                                                  ▼
+  └──────────────────── RETURNING_HOME ←─────────────────────────────┘
+    </div>
+
+    <h4>任務 D（擴展螺旋上升）</h4>
+    <div class="diagram">
+IDLE ──→ TAKING_OFF ──→ FLYING_TO_TARGET ──→ DESCENDING_TO_ORBIT_ALT ──→ SPIRAL_ASCENDING
+  ▲                                                                  │
+  │                                                                  ▼
+  └──────────────────── RETURNING_HOME ←─────────────────────────────┘
+
+D 模式與 C 模式共用 SPIRAL_ASCENDING 狀態，差異在 OrbitController 內部：
+  C 模式 → executeSpiralAscent()（固定半徑）
+  D 模式 → executeExpandingSpiral()（半徑從 rStart 線性增長到 rEnd）
+    </div>
+
+    <h4>Multi-Stop 多站任務</h4>
+    <div class="diagram">
+IDLE ──→ TAKING_OFF ──→ FLYING_TO_TARGET ──→ [任務 A/B/C] ──→ FLYING_TO_NEXT ──→ [下一站]
+  ▲                                                                      │
+  │                                                                      ▼
+  └────────────────── RETURNING_HOME ←── (最後一站完成) ←────────────────┘
+    </div>
+</div>
+
+<h3 id="state-details">狀態詳細說明</h3>
+<table>
+    <thead><tr><th>狀態</th><th>觸發條件</th><th>執行內容</th><th>完成條件</th></tr></thead>
+    <tbody>
+        <tr><td><span class="badge badge-blue">IDLE</span></td><td>初始 / 任務完成</td><td>待機</td><td>收到任務指令</td></tr>
+        <tr><td><span class="badge badge-green">TAKING_OFF</span></td><td>startMission()</td><td>自動起飛到 SAFE_TAKEOFF_HEIGHT</td><td>高度穩定 3 次讀數</td></tr>
+        <tr><td><span class="badge badge-green">FLYING_TO_TARGET</span></td><td>起飛完成</td><td>VirtualStick 飛往目標座標</td><td>距離 < 2m</td></tr>
+        <tr><td><span class="badge badge-orange">DESCENDING_TO_ORBIT_ALT</span></td><td>orbit.alt < 當前高度</td><td>下降到環繞高度</td><td>高度到位 ±0.3m</td></tr>
+        <tr><td><span class="badge badge-purple">RECORDING_360</span></td><td>A 模式</td><td>原地 yaw 旋轉 360° 錄影</td><td>旋轉 370°</td></tr>
+        <tr><td><span class="badge badge-purple">ORBITING</span></td><td>B 模式</td><td>環繞目標 360° 錄影</td><td>累計角度 370°</td></tr>
+        <tr><td><span class="badge badge-purple">SPIRAL_ASCENDING</span></td><td>C/D 模式</td><td>C：螺旋上升 N 圈 / D：擴展螺旋上升 N 圈</td><td>N 圈完成 + 高度達標</td></tr>
+        <tr><td><span class="badge badge-green">SHOOTING_PHOTOS</span></td><td>錄影完成</td><td>多角度拍照</td><td>所有照片拍完</td></tr>
+        <tr><td><span class="badge badge-blue">FLYING_TO_NEXT</span></td><td>Multi-Stop</td><td>飛往下一站</td><td>到達下一站</td></tr>
+        <tr><td><span class="badge badge-orange">RETURNING_HOME</span></td><td>任務完成 / 取消</td><td>自動返航降落</td><td>Motor locked</td></tr>
+        <tr><td><span class="badge badge-red">ERROR</span></td><td>任何階段異常</td><td>記錄錯誤，等待重置</td><td>90 秒後自動 → IDLE</td></tr>
+    </tbody>
+</table>
+
+<h3 id="state-guards">安全守衛機制</h3>
+<div class="grid-2">
+    <div class="card">
+        <h4>🔒 並發守衛</h4>
+        <ul>
+            <li><code>isCancelling: AtomicBoolean</code> — 防止重複取消</li>
+            <li><code>landingHandled: AtomicBoolean</code> — 5 條落地路徑互斥</li>
+            <li><code>isDownloading: AtomicBoolean</code> — 下載狀態原子操作</li>
+            <li><code>missionJob</code> — 協程 Job，取消時安全中止</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h4>⏱️ 超時保護</h4>
+        <ul>
+            <li>起飛：15 秒</li>
+            <li>爬升：30 秒</li>
+            <li>飛往目標：5 分鐘</li>
+            <li>環繞：3 分鐘</li>
+            <li>螺旋上升：10 分鐘</li>
+            <li>RTH：120 秒</li>
+            <li>ERROR 自動重置：90 秒</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ==================== 4. 資料流 ==================== -->
+<h2 id="data-flow">4. 資料流</h2>
+
+<h3 id="mqtt-flow">MQTT 指令流程</h3>
+<div class="card">
+    <div class="diagram">
+後端                    MqttClientManager         MqttMissionBridge         MissionStateMachine
+ │                            │                          │                          │
+ │── mission/start ──────────▶│                          │                          │
+ │                            │── onMissionStartReceived ▶│                          │
+ │                            │                          │── MissionValidator 驗證 ─▶│
+ │                            │                          │                          │
+ │◀── ack (accepted) ─────────│◀─────────────────────────│                          │
+ │                            │                          │── startMission() ────────▶│
+ │                            │                          │                          │── TAKING_OFF
+ │                            │                          │                          │── FLYING_TO_TARGET
+ │                            │                          │                          │── ORBITING
+ │                            │                          │                          │── SHOOTING_PHOTOS
+ │                            │                          │                          │── RETURNING_HOME
+ │                            │                          │                          │── IDLE
+ │                            │                          │                          │
+ │◀── ack (success) ──────────│◀─────────────────────────│◀── 任務完成回調 ─────────│
+ │                            │                          │                          │
+ │◀── status (每 10s) ────────│◀─── MqttStatusReporter ──│◀─── StateFlow 監聽 ────│
+    </div>
+</div>
+
+<h3 id="telemetry-flow">遙測資料流</h3>
+<div class="card">
+    <div class="diagram">
+DJI MSDK KeyManager          FlightManager              UI (StateFlow.collect)
+      │                            │                              │
+      │── KeyAltitude.listen ─────▶│── _altitude.value ──────────▶│ HUD 高度顯示
+      │── KeyBattery.listen ──────▶│── _batteryPercent.value ────▶│ HUD 電池顯示
+      │── KeyGPS.listen ──────────▶│── _gpsSatellites.value ─────▶│ HUD GPS 顯示
+      │── KeyLocation.listen ─────▶│── _currentLat/Lng.value ────▶│ HUD 座標顯示
+      │── KeyHomeLocation.listen ─▶│── homeLocation ─────────────▶│ 距離計算
+      │── KeyHeading.listen ──────▶│── _heading.value ───────────▶│ HUD 航向
+    </div>
+</div>
+
+<!-- ==================== 5. 核心演算法 ==================== -->
+<h2 id="algorithms">5. 核心演算法</h2>
+
+<h3 id="algo-flight">5.1 飛行速度控制</h3>
+<div class="card">
+    <p>飛往目標時使用<strong>比例控制器</strong>，接近目標時自動減速：</p>
+    <pre><code><span class="comment">// 飛行速度公式</span>
+<span class="keyword">val</span> speed = max(
+    min(distance * gain, maxSpeed),  <span class="comment">// 比例控制 + 上限</span>
+    minSpeed                          <span class="comment">// 最低速度保護</span>
+)
+
+<span class="comment">// 參數（可在 Settings UI 調整）</span>
+maxSpeed  = <span class="number">1.0</span> ~ <span class="number">13.0</span> m/s  <span class="comment">// 最大飛行速度</span>
+gain      = <span class="number">0.1</span> ~ <span class="number">1.0</span>       <span class="comment">// 比例增益（越大減速越早）</span>
+minSpeed  = <span class="number">1.0</span> m/s          <span class="comment">// 最低速度（防風卡住）</span></code></pre>
+
+    <p><strong>速度遞減特性：</strong>距離越近速度越低，形成平滑減速曲線。</p>
+    <pre><code>距離 20m → 速度 10.0 m/s（全速）
+距離 10m → 速度  5.0 m/s
+距離  5m → 速度  2.5 m/s
+距離  2m → 速度  1.0 m/s（到達門檻，停止）</code></pre>
+</div>
+
+<h3 id="algo-orbit">5.2 環繞控制（B/C/D 模式）</h3>
+<div class="card">
+    <pre><code><span class="comment">// 水平控制：切線速度 + PD 徑向修正</span>
+tangentialNorth = -sin(bearing) * orbitSpeed
+tangentialEast  =  cos(bearing) * orbitSpeed
+
+radialError = distFromCenter - orbitRadius
+radialDerivative = (radialError - prevRadialError) / dt
+radialSpeed = -(radialError * ORBIT_KP) - (radialDerivative * ORBIT_RADIAL_KD)
+
+<span class="comment">// 合成速度（等比例縮放確保速度大小 = orbitSpeed）</span>
+combined = tangential + radialCorrection [+ expansion]  <span class="comment">// D 模式加 expansion</span>
+scale = orbitSpeed / combined.magnitude
+param.pitch = combined.east * scale
+param.roll  = combined.north * scale
+
+<span class="comment">// Yaw 控制：PI + 前饋 + 視覺修正</span>
+yawOutput = yawError*KP + yawIntegral*KI + feedforward + visualCorrection + manualOffset</code></pre>
+
+    <div class="alert alert-info">
+        <strong>關鍵設計：</strong>環繞速度由 MQTT 倍率 + 半徑決定，不受 Settings 飛行速度影響。速度 1× = 每圈 60 秒，速度 3× = 每圈 20 秒。水平速度上限 13 m/s（DJI Mini 4 Pro 硬體限制）。
+    </div>
+</div>
+
+<h3 id="algo-spiral">5.3 螺旋上升（C/D 模式）</h3>
+<div class="card">
+    <pre><code><span class="comment">// 進度追蹤：角度與高度綁定</span>
+progress = totalAngle / totalAngleTarget   <span class="comment">// 0.0 → 1.0</span>
+targetAlt = zMin + altitudeGain * progress
+
+<span class="comment">// 垂直控制：基礎爬升率 + P 微調</span>
+climbRate = altitudeGain / totalTimeSec
+correction = (targetAlt - currentAlt) * SPIRAL_ALT_KP * 0.3   <span class="comment">// 限幅 ±0.3</span>
+verticalThrottle = climbRate + correction   <span class="comment">// 限幅 ±5.0 m/s</span>
+
+<span class="comment">// 雲台動態調整（每 500ms，非阻塞）</span>
+h = currentAlt - 1.7   <span class="comment">// 相對高度（扣除人眼高度）</span>
+altCorrection = getGimbalAltCorrection(currentAlt)   <span class="comment">// 高度分段修正表</span>
+gimbalPitch = -atan(h * altCorrection / radius) * 180/PI
+
+<span class="comment">// D 模式額外：半徑隨進度線性增長</span>
+updatedRadius = rStart + radiusGain * progress</code></pre>
+    <div class="alert alert-info">
+        <strong>D 模式速度上限感知：</strong>當半徑增大導致切線速度觸碰 13 m/s 上限時，系統會自動調整總角度目標（對數修正），確保角度與高度同步完成。這可能導致實際飛行圈數多於 MQTT 設定值。
+    </div>
+</div>
+
+<h3>5.4 電量預估</h3>
+<div class="card">
+    <pre><code><span class="comment">// Multi-Stop 電量預估</span>
+totalDist = homeToFirst + sum(各站間距離) + lastToHome
+totalDist += altitudeDiff * <span class="number">2</span>  <span class="comment">// 爬升以 2 倍水平距離換算</span>
+
+batteryEstimate = totalDist / (maxRadius * <span class="number">2</span>) * <span class="number">100</span>
+batteryEstimate = batteryEstimate.coerceIn(<span class="number">20</span>, <span class="number">60</span>)
+
+<span class="comment">// 若電量不足，提前返航</span>
+<span class="keyword">if</span> (currentBattery - batteryEstimate < <span class="number">20</span>) → RETURNING_HOME</code></pre>
+</div>
+
+<!-- ==================== 6. 並發設計 ==================== -->
+<h2 id="concurrency">6. 並發設計</h2>
+
+<h3 id="thread-model">線程模型</h3>
+<div class="card">
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────┐
+│                    Main Thread (UI)                      │
+│  • StateFlow 更新                                        │
+│  • MissionStateMachine 協程                              │
+│  • VirtualStick 指令發送（20Hz）                          │
+│  • GimbalManager 操作                                    │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                    IO Dispatcher                         │
+│  • MqttClientManager 連線/訂閱                           │
+│  • MqttStatusReporter 狀態回報                           │
+│  • MqttMissionBridge 指令處理                            │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                  SDK Callback Thread                      │
+│  • FlightManager listener 回調                           │
+│  • CameraManager 回調                                    │
+│  • VirtualStickController 狀態監聽                       │
+│  → 透過 scope.launch { } 切換到 Main 線程                │
+└─────────────────────────────────────────────────────────┘
+    </div>
+</div>
+
+<h3 id="atomic-ops">原子操作與同步</h3>
+<table>
+    <thead><tr><th>變數</th><th>型態</th><th>用途</th><th>保護機制</th></tr></thead>
+    <tbody>
+        <tr><td><code>isCancelling</code></td><td>AtomicBoolean</td><td>防止重複取消</td><td>compareAndSet</td></tr>
+        <tr><td><code>landingHandled</code></td><td>AtomicBoolean</td><td>落地路徑互斥</td><td>compareAndSet</td></tr>
+        <tr><td><code>isDownloading</code></td><td>AtomicBoolean</td><td>下載狀態</td><td>AtomicBoolean</td></tr>
+        <tr><td><code>isConnecting</code></td><td>AtomicBoolean</td><td>MQTT 連線中</td><td>compareAndSet</td></tr>
+        <tr><td><code>isBusy</code></td><td>AtomicBoolean</td><td>相機操作中</td><td>compareAndSet</td></tr>
+        <tr><td><code>processedMsgIds</code></td><td>synchronized Set</td><td>MQTT 去重</td><td>synchronized 區塊</td></tr>
+        <tr><td><code>@Volatile</code> 標記</td><td>—</td><td>跨線程可見性</td><td>JVM volatile</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 7. 檔案地圖 ==================== -->
+<h2 id="file-map">7. 檔案地圖</h2>
+
+<div class="file-tree">
+<span class="folder">app/src/main/java/dji/sampleV5/aircraft/</span>
+├── <span class="folder">config/</span>
+│   └── <span class="file">AppConfig.kt</span> <span class="desc">— 全域設定（編譯期常數 + SharedPreferences）</span>
+├── <span class="folder">dji/</span>
+│   ├── <span class="file">FlightManager.kt</span> <span class="desc">— 飛行狀態 StateFlow、KeyManager 訂閱</span>
+│   ├── <span class="file">CameraManager.kt</span> <span class="desc">— 拍照/錄影/對焦</span>
+│   ├── <span class="file">GimbalManager.kt</span> <span class="desc">— 雲台角度控制</span>
+│   └── <span class="file">MediaDownloadManager.kt</span> <span class="desc">— 媒體串流下載</span>
+├── <span class="folder">mission/</span>
+│   ├── <span class="file">MissionStateMachine.kt</span> <span class="desc">— ⭐ 任務狀態機（核心）</span>
+│   ├── <span class="file">FlightPhaseExecutor.kt</span> <span class="desc">— 飛行階段執行</span>
+│   ├── <span class="file">OrbitController.kt</span> <span class="desc">— A/B/C/D 環繞控制（分派至 OrbitMode）</span>
+│   ├── <span class="file">OrbitModeA.kt</span> <span class="desc">— A 模式原地旋轉</span>
+│   ├── <span class="file">OrbitModeB.kt</span> <span class="desc">— B 模式環繞</span>
+│   ├── <span class="file">OrbitModeC.kt</span> <span class="desc">— C 模式螺旋上升</span>
+│   ├── <span class="file">OrbitModeD.kt</span> <span class="desc">— D 模式擴展螺旋</span>
+│   ├── <span class="file">OrbitHelpers.kt</span> <span class="desc">— 環繞共用邏輯（視覺預選取）</span>
+│   ├── <span class="file">VisualYawAssist.kt</span> <span class="desc">— 視覺輔助 Yaw 追蹤（模板匹配）</span>
+│   ├── <span class="file">MissionSafetyMonitor.kt</span> <span class="desc">— 安全異常監控</span>
+│   ├── <span class="file">PhotoSequenceController.kt</span> <span class="desc">— 拍照序列</span>
+│   ├── <span class="file">VirtualStickController.kt</span> <span class="desc">— VS 啟用/停用</span>
+│   └── <span class="file">VirtualStickParams.kt</span> <span class="desc">— VS 參數工廠</span>
+├── <span class="folder">mqtt/</span>
+│   ├── <span class="file">MqttClientManager.kt</span> <span class="desc">— MQTT 連線管理</span>
+│   ├── <span class="file">MqttMissionBridge.kt</span> <span class="desc">— 指令 → 任務轉換</span>
+│   ├── <span class="file">MissionValidator.kt</span> <span class="desc">— 任務 payload 集中驗證</span>
+│   ├── <span class="file">MqttStatusReporter.kt</span> <span class="desc">— 狀態回報 + 心跳</span>
+│   └── <span class="file">MqttPayloadModels.kt</span> <span class="desc">— Payload 資料模型</span>
+├── <span class="folder">safety/</span>
+│   ├── <span class="file">SafetyEventLogger.kt</span> <span class="desc">— CSV 事件記錄</span>
+│   └── <span class="file">SafetyAnomalyType.kt</span> <span class="desc">— 異常類型列舉</span>
+├── <span class="folder">util/</span>
+│   ├── <span class="file">GeoMath.kt</span> <span class="desc">— GPS 距離/方位角計算（Haversine）</span>
+│   └── <span class="file">AppLog.kt</span> <span class="desc">— Log wrapper（release 靜默 debug）</span>
+├── <span class="folder">settings/</span>
+│   └── <span class="file">SettingsActivity.kt</span> <span class="desc">— 設定頁面</span>
+├── <span class="file">DJIMainActivity.kt</span> <span class="desc">— 主畫面入口</span>
+└── <span class="file">MissionControlActivity.kt</span> <span class="desc">— 全螢幕 FPV + HUD 儀表板</span>
+</div>
+
+<div style="margin-top:60px;padding:20px;background:#f1f3f4;border-radius:8px;text-align:center;color:var(--text-light);font-size:13px">
+    <p>📄 DJI Mini 4 Pro 任務控制系統 — 架構說明文件 v3.2</p>
+    <p>最後更新：2026-08-11 | SDK: DJI MSDK v5 (5.18.0)</p>
+</div>
+
+</div><!-- /main -->
+
+</body>
+</html>

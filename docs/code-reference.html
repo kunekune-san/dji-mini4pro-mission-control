@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJI Mini 4 Pro 任務控制系統 — 程式碼百科全書</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1558b0;
+            --accent: #ff6d00;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #202124;
+            --text-light: #5f6368;
+            --border: #dadce0;
+            --success: #0d904f;
+            --warning: #e37400;
+            --danger: #d93025;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100vh;
+            background: #0d1117;
+            color: #e0e0e0;
+            overflow-y: auto;
+            z-index: 100;
+            padding: 20px 0;
+            font-size: 13px;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+        }
+
+        .sidebar-header h2 { color: #fff; font-size: 16px; }
+        .sidebar-header .version { color: #888; font-size: 12px; }
+
+        .sidebar-search {
+            padding: 0 16px 12px;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .sidebar-search input::placeholder { color: #666; }
+        .sidebar-search input:focus { border-color: var(--primary); }
+
+        .sidebar nav a {
+            display: block;
+            padding: 6px 20px;
+            color: #b0b0b0;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .sidebar nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+        .sidebar nav a.section-title {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+            padding-bottom: 4px;
+        }
+
+        .sidebar nav a.file-link { padding-left: 30px; font-size: 12px; }
+        .sidebar nav a.file-link::before { content: '📄 '; }
+
+        /* Main */
+        .main {
+            margin-left: 300px;
+            padding: 40px 50px;
+            max-width: 1100px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 8px;
+            border-bottom: 3px solid #7c3aed;
+            padding-bottom: 12px;
+        }
+
+        .subtitle { color: var(--text-light); font-size: 16px; margin-bottom: 40px; }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-top: 50px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 24px;
+            margin-bottom: 10px;
+        }
+
+        p { margin-bottom: 10px; }
+
+        /* File section */
+        .file-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .file-header {
+            background: #f8f9fa;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .file-header:hover { background: #f0f2f5; }
+
+        .file-header .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+
+        .file-header .file-icon.core { background: #7c3aed; }
+        .file-header .file-icon.dji { background: var(--primary); }
+        .file-header .file-icon.mqtt { background: var(--success); }
+        .file-header .file-icon.util { background: var(--accent); }
+        .file-header .file-icon.safety { background: var(--danger); }
+        .file-header .file-icon.config { background: #6366f1; }
+        .file-header .file-icon.ui { background: #ec4899; }
+
+        .file-header .file-info h3 { margin: 0; font-size: 17px; }
+        .file-header .file-info .path { font-size: 12px; color: var(--text-light); font-family: 'JetBrains Mono', monospace; }
+        .file-header .file-info .desc { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+
+        .file-header .badges { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+
+        .file-body { padding: 24px; }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: #f1f3f4;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        tbody td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tbody tr:hover { background: #f8f9fa; }
+
+        code {
+            background: #f1f3f4;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 12px;
+            color: #d93025;
+        }
+
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        pre code { background: none; color: inherit; padding: 0; }
+
+        .kw { color: #569cd6; }
+        .ty { color: #4ec9b0; }
+        .str { color: #ce9178; }
+        .num { color: #b5cea8; }
+        .cmt { color: #6a9955; }
+        .fn { color: #dcdcaa; }
+        .ann { color: #dcdcaa; }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-blue { background: #e8f0fe; color: var(--primary); }
+        .badge-green { background: #e6f4ea; color: var(--success); }
+        .badge-orange { background: #fef7e0; color: var(--warning); }
+        .badge-red { background: #fce8e6; color: var(--danger); }
+        .badge-purple { background: #f3e8fd; color: #7c3aed; }
+        .badge-gray { background: #f1f3f4; color: var(--text-light); }
+
+        /* Member section */
+        .member-section { margin-bottom: 20px; }
+        .member-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Search results */
+        .search-hidden { display: none !important; }
+
+        /* Scrollbar */
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 20px; }
+        }
+
+        @media print {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .file-section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h2>📖 程式碼百科全書</h2>
+        <div class="version">v4.1 | 2026-08-28</div>
+    </div>
+    <div class="sidebar-search">
+        <input type="text" id="searchInput" placeholder="搜尋檔案或方法..." oninput="searchFiles()">
+    </div>
+    <nav id="sidebarNav">
+        <a href="#config" class="section-title">⚙️ 設定 Config</a>
+        <a href="#AppConfig" class="file-link">AppConfig.kt</a>
+
+        <a href="#dji" class="section-title">🚁 DJI 抽象層</a>
+        <a href="#FlightManager" class="file-link">FlightManager.kt</a>
+        <a href="#CameraManager" class="file-link">CameraManager.kt</a>
+        <a href="#GimbalManager" class="file-link">GimbalManager.kt</a>
+        <a href="#MediaDownloadManager" class="file-link">MediaDownloadManager.kt</a>
+
+        <a href="#mission" class="section-title">⚡ 任務控制</a>
+        <a href="#MissionStateMachine" class="file-link">MissionStateMachine.kt</a>
+        <a href="#MissionSafetyMonitor" class="file-link">MissionSafetyMonitor.kt</a>
+        <a href="#FlightPhaseExecutor" class="file-link">FlightPhaseExecutor.kt</a>
+        <a href="#OrbitController" class="file-link">OrbitController.kt</a>
+        <a href="#OrbitHelpers" class="file-link">OrbitHelpers.kt</a>
+        <a href="#OrbitModeA" class="file-link">OrbitModeA.kt</a>
+        <a href="#OrbitModeB" class="file-link">OrbitModeB.kt</a>
+        <a href="#OrbitModeC" class="file-link">OrbitModeC.kt</a>
+        <a href="#OrbitModeD" class="file-link">OrbitModeD.kt</a>
+        <a href="#PhotoSequenceController" class="file-link">PhotoSequenceController.kt</a>
+        <a href="#VirtualStickController" class="file-link">VirtualStickController.kt</a>
+        <a href="#VirtualStickParams" class="file-link">VirtualStickParams.kt</a>
+        <a href="#VisualYawAssist" class="file-link">VisualYawAssist.kt</a>
+
+        <a href="#mqtt" class="section-title">📡 MQTT 通訊</a>
+        <a href="#MqttClientManager" class="file-link">MqttClientManager.kt</a>
+        <a href="#MqttMissionBridge" class="file-link">MqttMissionBridge.kt</a>
+        <a href="#MqttStatusReporter" class="file-link">MqttStatusReporter.kt</a>
+        <a href="#MqttPayloadModels" class="file-link">MqttPayloadModels.kt</a>
+        <a href="#MissionValidator" class="file-link">MissionValidator.kt</a>
+        <a href="#MqttConnectionEventBus" class="file-link">MqttConnectionEventBus.kt</a>
+        <a href="#MqttTopics" class="file-link">MqttTopics.kt</a>
+
+        <a href="#safety" class="section-title">🛡️ 安全監控</a>
+        <a href="#SafetyEventLogger" class="file-link">SafetyEventLogger.kt</a>
+        <a href="#SafetyAnomalyType" class="file-link">SafetyAnomalyType.kt</a>
+
+        <a href="#util" class="section-title">🔧 工具類別</a>
+        <a href="#GeoMath" class="file-link">GeoMath.kt</a>
+        <a href="#AppLog" class="file-link">AppLog.kt</a>
+
+        <a href="#ui" class="section-title">📱 UI 介面</a>
+        <a href="#MissionControlActivity" class="file-link">MissionControlActivity.kt</a>
+        <a href="#SettingsActivity" class="file-link">SettingsActivity.kt</a>
+
+        <a href="#cases" class="section-title">🎯 任務案例</a>
+        <a href="#case-mission-a" class="file-link">任務 A — 原地旋轉</a>
+        <a href="#case-mission-b" class="file-link">任務 B — 環繞飛行</a>
+        <a href="#case-mission-c" class="file-link">任務 C — 螺旋上升</a>
+        <a href="#case-mission-d" class="file-link">任務 D — 擴展螺旋</a>
+        <a href="#mission-comparison" class="file-link">四模式比較總表</a>
+    </nav>
+</aside>
+
+<div class="main">
+
+<h1>📖 程式碼百科全書</h1>
+<p class="subtitle">每個核心檔案的完整 API 參考 — 新開發者的最佳查詢手冊</p>
+
+<!-- ==================== CONFIG ==================== -->
+<h2 id="config">⚙️ 設定 Config</h2>
+
+<div class="file-section" id="AppConfig">
+    <div class="file-header">
+        <div class="file-icon config">⚙️</div>
+        <div class="file-info">
+            <h3>AppConfig</h3>
+            <div class="path">config/AppConfig.kt</div>
+            <div class="desc">全域設定單例 — 編譯期常數 + SharedPreferences 運行時設定</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+            <span class="badge badge-blue">核心</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 SharedPreferences Key 常數</h4>
+            <table>
+                <thead><tr><th>常數</th><th>值</th><th>用途</th></tr></thead>
+                <tbody>
+                    <tr><td><code>KEY_MAX_FLIGHT_HEIGHT</code></td><td><code>"pref_max_flight_height"</code></td><td>最大飛行高度</td></tr>
+                    <tr><td><code>KEY_MAX_FLIGHT_RADIUS</code></td><td><code>"pref_max_flight_radius"</code></td><td>最大飛行半徑</td></tr>
+                    <tr><td><code>KEY_RTH_HEIGHT</code></td><td><code>"pref_rth_height"</code></td><td>返航高度</td></tr>
+                    <tr><td><code>KEY_SAFE_TAKEOFF_HEIGHT</code></td><td><code>"pref_safe_takeoff_height"</code></td><td>安全起飛高度</td></tr>
+                    <tr><td><code>KEY_APP_RTH_THRESHOLD</code></td><td><code>"pref_app_rth_threshold"</code></td><td>電池返航門檻</td></tr>
+                    <tr><td><code>KEY_MAX_FLIGHT_SPEED</code></td><td><code>"pref_max_flight_speed"</code></td><td>最大飛行速度</td></tr>
+                    <tr><td><code>KEY_SPEED_GAIN</code></td><td><code>"pref_speed_gain"</code></td><td>速度比例增益</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 飛行安全常數（編譯期）</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>MAX_FLIGHT_RADIUS</code></td><td>Float</td><td><code>1000.0f</code></td><td>最大飛行半徑 (m)</td></tr>
+                    <tr><td><code>MAX_FLIGHT_HEIGHT</code></td><td>Float</td><td><code>120.0f</code></td><td>最大飛行高度 (m)</td></tr>
+                    <tr><td><code>RTH_HEIGHT</code></td><td>Float</td><td><code>30.0f</code></td><td>返航高度 (m)</td></tr>
+                    <tr><td><code>SAFE_GPS_SATELLITE_MIN</code></td><td>Int</td><td><code>8</code></td><td>最低衛星數</td></tr>
+                    <tr><td><code>ARRIVAL_THRESHOLD_M</code></td><td>Float</td><td><code>2.0f</code></td><td>到達判定距離 (m)</td></tr>
+                    <tr><td><code>SAFE_TAKEOFF_HEIGHT</code></td><td>Float</td><td><code>3.0f</code></td><td>安全起飛高度 (m)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 VirtualStick 參數</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>VIRTUAL_STICK_MAX_SPEED</code></td><td>Float</td><td><code>5.0f</code></td><td>最大水平飛行速度 (m/s)</td></tr>
+                    <tr><td><code>VIRTUAL_STICK_SEND_INTERVAL_MS</code></td><td>Long</td><td><code>50L</code></td><td>指令頻率 20Hz</td></tr>
+                    <tr><td><code>CLIMB_THROTTLE</code></td><td>Float</td><td><code>5.0f</code></td><td>垂直爬升/下降速度 (m/s)，DJI Mini 4 Pro 上限</td></tr>
+                    <tr><td><code>YAW_SPEED_DEG_PER_SEC</code></td><td>Float</td><td><code>45.0f</code></td><td>一般 yaw 速度 (°/s)</td></tr>
+                    <tr><td><code>RECORDING_YAW_SPEED_DEG_PER_SEC</code></td><td>Float</td><td><code>12.0f</code></td><td>錄影 yaw 速度 (°/s)</td></tr>
+                    <tr><td><code>POSITION_HOLD_MAX_SPEED</code></td><td>Float</td><td><code>1.0f</code></td><td>位置保持最大速度 (m/s)</td></tr>
+                    <tr><td><code>YAW_ALIGN_PROPORTIONAL_GAIN</code></td><td>Double</td><td><code>0.8</code></td><td>Yaw 對齊比例增益</td></tr>
+                    <tr><td><code>SPEED_PROPORTIONAL_GAIN</code></td><td>Double</td><td><code>0.5</code></td><td>速度比例增益（預設值）</td></tr>
+                    <tr><td><code>MAX_FLIGHT_SPEED_DEFAULT</code></td><td>Float</td><td><code>5.0f</code></td><td>預設最大飛行速度</td></tr>
+                    <tr><td><code>MAX_FLIGHT_SPEED_MIN</code></td><td>Float</td><td><code>1.0f</code></td><td>最小可調速度</td></tr>
+                    <tr><td><code>MAX_FLIGHT_SPEED_MAX</code></td><td>Float</td><td><code>13.0f</code></td><td>最大可調速度</td></tr>
+                    <tr><td><code>SPEED_GAIN_DEFAULT</code></td><td>Double</td><td><code>0.5</code></td><td>預設比例增益</td></tr>
+                    <tr><td><code>SPEED_GAIN_MIN</code></td><td>Double</td><td><code>0.1</code></td><td>最小增益</td></tr>
+                    <tr><td><code>SPEED_GAIN_MAX</code></td><td>Double</td><td><code>1.0</code></td><td>最大增益</td></tr>
+                    <tr><td><code>MIN_FLIGHT_SPEED</code></td><td>Float</td><td><code>1.0f</code></td><td>最低飛行速度</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 環繞參數</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>ORBIT_TIMEOUT_MS</code></td><td>Long</td><td><code>180000L</code></td><td>環繞超時 3 分鐘</td></tr>
+                    <tr><td><code>ORBIT_ANGLE_THRESHOLD</code></td><td>Double</td><td><code>370.0</code></td><td>完成一圈角度門檻</td></tr>
+                    <tr><td><code>ORBIT_KP</code></td><td>Double</td><td><code>0.4</code></td><td>半徑修正 P 增益</td></tr>
+                    <tr><td><code>ORBIT_RADIAL_KD</code></td><td>Double</td><td><code>0.08</code></td><td>半徑修正 D 增益（抑制過沖）</td></tr>
+                    <tr><td><code>ORBIT_MAX_SPEED</code></td><td>Float</td><td><code>8.0f</code></td><td>環繞最大速度 (m/s)</td></tr>
+                    <tr><td><code>ORBIT_YAW_KP</code></td><td>Double</td><td><code>0.4</code></td><td>環繞 Yaw P 增益</td></tr>
+                    <tr><td><code>ORBIT_YAW_KI</code></td><td>Double</td><td><code>0.03</code></td><td>環繞 Yaw I 增益</td></tr>
+                    <tr><td><code>ORBIT_YAW_FEEDFORWARD_GAIN</code></td><td>Double</td><td><code>1.0</code></td><td>Yaw Bearing Rate 前饋增益</td></tr>
+                    <tr><td><code>ORBIT_YAW_PREDICTION_SEC</code></td><td>Double</td><td><code>1.0</code></td><td>Yaw 前饋預測時間 (s)</td></tr>
+                    <tr><td><code>ORBIT_FLYAWAY_FACTOR</code></td><td>Float</td><td><code>2.5f</code></td><td>Flyaway 判定倍數</td></tr>
+                    <tr><td><code>ORBIT_BATTERY_CHECK_INTERVAL_DEG</code></td><td>Double</td><td><code>90.0</code></td><td>每 90° 檢查電池</td></tr>
+                    <tr><td><code>MIN_ORBIT_TIME_SEC</code></td><td>Double</td><td><code>60.0</code></td><td>最短環繞時間</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 螺旋上升參數（Mission C）</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>SPIRAL_TIMEOUT_MS</code></td><td>Long</td><td><code>600000L</code></td><td>螺旋超時 10 分鐘</td></tr>
+                    <tr><td><code>SPIRAL_MIN_RADIUS</code></td><td>Double</td><td><code>5.0</code></td><td>最小螺旋半徑 (m)</td></tr>
+                    <tr><td><code>SPIRAL_MIN_TURNS</code></td><td>Int</td><td><code>3</code></td><td>最少圈數</td></tr>
+                    <tr><td><code>SPIRAL_MAX_TURNS</code></td><td>Int</td><td><code>10</code></td><td>最多圈數</td></tr>
+                    <tr><td><code>SPIRAL_ALT_KP</code></td><td>Double</td><td><code>0.8</code></td><td>高度追蹤 P 增益</td></tr>
+                    <tr><td><code>SPIRAL_MAX_CLIMB_RATE</code></td><td>Float</td><td><code>5.0f</code></td><td>最大垂直速度 (m/s)</td></tr>
+                    <tr><td><code>SPIRAL_GIMBAL_HEIGHT_THRESHOLD</code></td><td>Double</td><td><code>1.7</code></td><td>雲台切換高度門檻 (m)</td></tr>
+                    <tr><td><code>SPIRAL_GIMBAL_UPDATE_INTERVAL_M</code></td><td>Double</td><td><code>0.5</code></td><td>雲台更新高度間隔 (m)，僅供參考</td></tr>
+                    <tr><td><code>SPIRAL_GIMBAL_UPDATE_INTERVAL_MS</code></td><td>Long</td><td><code>500L</code></td><td>雲台更新時間節流 (ms)，實際使用此值</td></tr>
+                    <tr><td><code>SPIRAL_RAMP_UP_DURATION_SEC</code></td><td>Double</td><td><code>1.5</code></td><td>螺旋啟動加速時間 (s)，easeInSine 平滑過渡</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 雲台拉平過渡參數（Mission C/D 結束）</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>GIMBAL_PULL_UP_DURATION_SEC</code></td><td>Double</td><td><code>6.0</code></td><td>雲台拉平持續時間 (s)，錄影中抬升至 0°</td></tr>
+                    <tr><td><code>GIMBAL_PULL_UP_HOLD_SEC</code></td><td>Double</td><td><code>1.0</code></td><td>雲台拉平後定格時間 (s)</td></tr>
+                    <tr><td><code>GIMBAL_PULL_UP_DECELERATION_SEC</code></td><td>Double</td><td><code>2.0</code></td><td>拉平前水平漸進減速時間 (s)，避免急煞抖動</td></tr>
+                    <tr><td><code>GIMBAL_PULL_UP_SETTLE_PAUSE_MS</code></td><td>Long</td><td><code>500L</code></td><td>減速完成後穩定暫停 (ms)，確保完全靜止</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 環繞速度倍率</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>ORBIT_SPEED_MIN</code></td><td>Double</td><td><code>1.0</code></td><td>最慢倍率（每圈 60s，標準）</td></tr>
+                    <tr><td><code>ORBIT_SPEED_MAX</code></td><td>Double</td><td><code>5.0</code></td><td>最快倍率（每圈 12s，C/D 使用）</td></tr>
+                    <tr><td><code>ORBIT_SPEED_MAX_A</code></td><td>Double</td><td><code>2.0</code></td><td>A 模式上限（原地旋轉，避免 rolling shutter）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 Yaw 控制進階參數</h4>
+            <table>
+                <thead><tr><th>常數</th><th>型態</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>YAW_INTEGRAL_CLAMP</code></td><td>Double</td><td><code>35.0</code></td><td>Yaw 積分項限幅（50→20→35：高速時 PI 有足夠權限補償前饋誤差，維持前饋主導）</td></tr>
+                    <tr><td><code>YAW_OUTPUT_CLAMP</code></td><td>Double</td><td><code>100.0</code></td><td>Yaw 輸出限幅 (°/s)，DJI Mini 4 Pro 硬體上限</td></tr>
+                    <tr><td><code>ORBIT_BEARING_RATE_ALPHA</code></td><td>Double</td><td><code>0.25</code></td><td>BearingRate 前饋低通濾波係數</td></tr>
+                    <tr><td><code>CMD_SMOOTH_YAW_ALPHA</code></td><td>Double</td><td><code>0.6</code></td><td>Yaw 指令低通濾波係數</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 超時常數</h4>
+            <table>
+                <thead><tr><th>常數</th><th>值</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>TAKEOFF_TIMEOUT_MS</code></td><td><code>15000L</code></td><td>起飛超時 15 秒</td></tr>
+                    <tr><td><code>CLIMB_TIMEOUT_MS</code></td><td><code>30000L</code></td><td>爬升超時 30 秒</td></tr>
+                    <tr><td><code>FLY_TO_TARGET_TIMEOUT_MS</code></td><td><code>300000L</code></td><td>飛行超時 5 分鐘</td></tr>
+                    <tr><td><code>RTH_TIMEOUT_MS</code></td><td><code>120000L</code></td><td>返航超時 120 秒</td></tr>
+                    <tr><td><code>ERROR_AUTO_RESET_MS</code></td><td><code>90000L</code></td><td>ERROR 自動重置 90 秒</td></tr>
+                    <tr><td><code>YAW_ROTATION_TIMEOUT_MS</code></td><td><code>60000L</code></td><td>Yaw 旋轉超時 60 秒</td></tr>
+                    <tr><td><code>PHOTO_ROTATION_TIMEOUT_MS</code></td><td><code>15000L</code></td><td>拍照旋轉超時 15 秒</td></tr>
+                    <tr><td><code>CAMERA_WRITE_DELAY_MS</code></td><td><code>6000L</code></td><td>SD 卡寫入等待</td></tr>
+                    <tr><td><code>PHOTO_INTER_SHOT_DELAY_MS</code></td><td><code>2000L</code></td><td>拍照間隔</td></tr>
+                    <tr><td><code>CANCEL_RTH_TIMEOUT_MS</code></td><td><code>60000L</code></td><td>取消任務返航超時 60 秒</td></tr>
+                    <tr><td><code>YAW_ALIGNMENT_TIMEOUT_MS</code></td><td><code>15000L</code></td><td>Yaw 對齊超時 15 秒</td></tr>
+                    <tr><td><code>MQTT_DISCONNECT_RTH_TIMEOUT_MS</code></td><td><code>120000L</code></td><td>MQTT 斷線且飛行中，超時自動返航</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 Runtime 方法（SharedPreferences）</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>getMqttHost()</code></td><td>String</td><td>MQTT broker 主機（預設 broker.emqx.io）</td></tr>
+                    <tr><td><code>getMqttPort()</code></td><td>String</td><td>MQTT broker 連接埠（預設 1883）</td></tr>
+                    <tr><td><code>getMqttBrokerUri()</code></td><td>String</td><td>完整 URI（tcp://host:port）</td></tr>
+                    <tr><td><code>getTopicPrefix()</code></td><td>String</td><td>Topic 前綴（預設 example/DRONE-001）</td></tr>
+                    <tr><td><code>getMqttUsername()</code></td><td>String</td><td>MQTT 帳號</td></tr>
+                    <tr><td><code>getMqttPassword()</code></td><td>String</td><td>MQTT 密碼</td></tr>
+                    <tr><td><code>saveMqttSettings(host, port, topicPrefix, username, password)</code></td><td>Unit</td><td>儲存 MQTT 設定（含 topic 驗證）</td></tr>
+                    <tr><td><code>getRcMode()</code></td><td>String</td><td>RC 模式（USA/JP/CH）</td></tr>
+                    <tr><td><code>saveRcMode(mode)</code></td><td>Unit</td><td>儲存 RC 模式</td></tr>
+                    <tr><td><code>getMaxFlightHeight()</code></td><td>Float</td><td>最大飛行高度</td></tr>
+                    <tr><td><code>getMaxFlightRadius()</code></td><td>Float</td><td>最大飛行半徑</td></tr>
+                    <tr><td><code>getRthHeight()</code></td><td>Float</td><td>返航高度</td></tr>
+                    <tr><td><code>getSafeTakeoffHeight()</code></td><td>Float</td><td>安全起飛高度</td></tr>
+                    <tr><td><code>saveFlightLimits(maxHeight, maxRadius, rthHeight)</code></td><td>Unit</td><td>儲存飛行限制</td></tr>
+                    <tr><td><code>getMaxFlightSpeed()</code></td><td>Float</td><td>最大飛行速度 (1~13 m/s)</td></tr>
+                    <tr><td><code>saveMaxFlightSpeed(speed)</code></td><td>Unit</td><td>儲存最大飛行速度（自動 clamp）</td></tr>
+                    <tr><td><code>getSpeedGain()</code></td><td>Double</td><td>速度比例增益 (0.1~1.0)</td></tr>
+                    <tr><td><code>saveSpeedGain(gain)</code></td><td>Unit</td><td>儲存速度增益（自動 clamp）</td></tr>
+                    <tr><td><code>getAppRthThreshold()</code></td><td>Int</td><td>電池返航門檻 (20~50%)</td></tr>
+                    <tr><td><code>saveAppRthThreshold(threshold)</code></td><td>Unit</td><td>儲存電池門檻（自動 clamp）</td></tr>
+                    <tr><td><code>getErrorAutoResetMs()</code></td><td>Long</td><td>ERROR 自動重置時間</td></tr>
+                    <tr><td><code>getGpsEmaAlpha()</code></td><td>Double</td><td>GPS EMA 濾波係數 (0.2~0.8)</td></tr>
+                    <tr><td><code>saveGpsEmaAlpha(alpha)</code></td><td>Unit</td><td>儲存 GPS 濾波係數（自動 clamp）</td></tr>
+                    <tr><td><code>getCmdSmoothAlpha()</code></td><td>Double</td><td>指令平滑化係數 (0.3~0.8)</td></tr>
+                    <tr><td><code>saveCmdSmoothAlpha(alpha)</code></td><td>Unit</td><td>儲存指令平滑係數（自動 clamp）</td></tr>
+                    <tr><td><code>getMagneticDeclination()</code></td><td>Double</td><td>磁偏角補償值（度）</td></tr>
+                    <tr><td><code>saveMagneticDeclination(declination)</code></td><td>Unit</td><td>儲存磁偏角補償值</td></tr>
+                    <tr><td><code>getVisualYawOffset()</code></td><td>Double</td><td>環繞 Yaw 手動偏移（°/s），正=順時針</td></tr>
+                    <tr><td><code>saveVisualYawOffset(offset)</code></td><td>Unit</td><td>儲存 Yaw 手動偏移</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== DJI 抽象層 ==================== -->
+<h2 id="dji">🚁 DJI 抽象層</h2>
+
+<div class="file-section" id="FlightManager">
+    <div class="file-header">
+        <div class="file-icon dji">✈️</div>
+        <div class="file-info">
+            <h3>FlightManager</h3>
+            <div class="path">dji/FlightManager.kt</div>
+            <div class="desc">飛行狀態的核心提供者 — KeyManager 訂閱 + StateFlow 暴露</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+            <span class="badge badge-blue">核心</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 StateFlow 屬性</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>isConnected</code></td><td><code>StateFlow&lt;Boolean&gt;</code></td><td>飛控連線狀態</td></tr>
+                    <tr><td><code>isFlying</code></td><td><code>StateFlow&lt;Boolean&gt;</code></td><td>是否在空中</td></tr>
+                    <tr><td><code>altitude</code></td><td><code>StateFlow&lt;Double&gt;</code></td><td>相對高度 (m)</td></tr>
+                    <tr><td><code>distanceFromHome</code></td><td><code>StateFlow&lt;Double&gt;</code></td><td>與 Home 距離 (m)</td></tr>
+                    <tr><td><code>batteryPercent</code></td><td><code>StateFlow&lt;Int&gt;</code></td><td>電池電量 (%)</td></tr>
+                    <tr><td><code>currentLat</code></td><td><code>StateFlow&lt;Double?&gt;</code></td><td>當前緯度</td></tr>
+                    <tr><td><code>currentLng</code></td><td><code>StateFlow&lt;Double?&gt;</code></td><td>當前經度</td></tr>
+                    <tr><td><code>heading</code></td><td><code>StateFlow&lt;Double&gt;</code></td><td>機頭朝向 (°)</td></tr>
+                    <tr><td><code>gpsSatellites</code></td><td><code>StateFlow&lt;Int?&gt;</code></td><td>GPS 衛星數</td></tr>
+                    <tr><td><code>gpsSignalLevel</code></td><td><code>StateFlow&lt;Int?&gt;</code></td><td>GPS 訊號等級 0-5</td></tr>
+                    <tr><td><code>isFirmwareRthActive</code></td><td><code>StateFlow&lt;Boolean&gt;</code></td><td>固件自動返航是否啟動（低電池觸發）</td></tr>
+                    <tr><td><code>firmwareRthNeeded</code></td><td><code>StateFlow&lt;Int&gt;</code></td><td>韌體估算返航所需電量 (%)</td></tr>
+                    <tr><td><code>effectiveThreshold</code></td><td><code>StateFlow&lt;Int&gt;</code></td><td>有效 RTH 門檻（直接採用使用者設定值）</td></tr>
+                    <tr><td><code>safetyWarning</code></td><td><code>StateFlow&lt;String?&gt;</code></td><td>安全警告文字（低電池/GPS 弱等，null=無警告）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>takeOff(callback?)</code></td><td>Unit</td><td>自動起飛</td></tr>
+                    <tr><td><code>land(callback?)</code></td><td>Unit</td><td>自動降落</td></tr>
+                    <tr><td><code>startRTH(callback?)</code></td><td>Unit</td><td>開始返航（Return to Home）</td></tr>
+                    <tr><td><code>getCurrentLocation()</code></td><td><code>LocationCoordinate3D?</code></td><td>取得當前 GPS 座標（原始快取值）</td></tr>
+                    <tr><td><code>getFilteredLocation()</code></td><td><code>LocationCoordinate3D?</code></td><td>取得 EMA 濾波後座標（環繞控制用）</td></tr>
+                    <tr><td><code>getCurrentYaw()</code></td><td>Double</td><td>取得當前航向角（快取值，不阻塞）</td></tr>
+                    <tr><td><code>getCurrentAltitude()</code></td><td>Double?</td><td>取得當前相對高度</td></tr>
+                    <tr><td><code>isMotorsOn()</code></td><td>Boolean</td><td>馬達是否運轉（快取版，不阻塞）</td></tr>
+                    <tr><td><code>isOnGround()</code></td><td>Boolean</td><td>是否在地面（同步 SDK 呼叫）</td></tr>
+                    <tr><td><code>isGpsReadyForMission()</code></td><td>Boolean</td><td>GPS 是否就緒（衛星 ≥ 8 且訊號 ≥ Level 3）</td></tr>
+                    <tr><td><code>writeSafetyParameters()</code></td><td>Unit</td><td>寫入安全限制到飛控（高度/距離/失聯行為/返航高度）</td></tr>
+                    <tr><td><code>fetchCurrentState()</code></td><td>Unit</td><td>一次性 fetch 高度、電池、Home 位置</td></tr>
+                    <tr><td><code>setOnMotorLockedCallback(callback?)</code></td><td>Unit</td><td>設定馬達鎖定回呼（降落後觸發照片下載）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 內部屬性</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>homeLocation</code></td><td><code>@Volatile LocationCoordinate3D?</code></td><td>Home 點座標（含高度）</td></tr>
+                    <tr><td><code>cachedLocation</code></td><td><code>@Volatile LocationCoordinate3D?</code></td><td>快取的 GPS 位置（含高度）</td></tr>
+                    <tr><td><code>previousBatteryPct</code></td><td>Int</td><td>上次電池百分比（初始 -1，向下穿越偵測）</td></tr>
+                    <tr><td><code>_isFirmwareRthActive</code></td><td><code>MutableStateFlow&lt;Boolean&gt;</code></td><td>固件 RTH 是否啟動（對外暴露為 <code>isFirmwareRthActive: StateFlow&lt;Boolean&gt;</code>）</td></tr>
+                    <tr><td><code>onMotorLockedCallback</code></td><td><code>@Volatile (() -> Unit)?</code></td><td>Motor locked 回調（馬達停止時觸發）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="CameraManager">
+    <div class="file-header">
+        <div class="file-icon dji">📷</div>
+        <div class="file-info">
+            <h3>CameraManager</h3>
+            <div class="path">dji/CameraManager.kt</div>
+            <div class="desc">相機操作封裝 — 拍照/錄影/對焦，含併發保護</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>takePhoto(callback?)</code></td><td>Unit</td><td>拍照（含 isBusy 守衛，可選 callback）</td></tr>
+                    <tr><td><code>startVideoRecord(callback?)</code></td><td>Unit</td><td>開始錄影（含 isBusy 守衛，可選 callback）</td></tr>
+                    <tr><td><code>stopVideoRecord(callback?)</code></td><td>Unit</td><td>停止錄影（可選 callback）</td></tr>
+                    <tr><td><code>triggerAutoFocus()</code></td><td>suspend Unit</td><td>觸發自動對焦（5 秒超時）</td></tr>
+                    <tr><td><code>setCameraMode(isPhoto, callback?)</code></td><td>Unit</td><td>切換拍照/錄影模式（isPhoto: Boolean）</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 內部屬性</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>isBusy</code></td><td>AtomicBoolean</td><td>防止拍照/錄影併發操作</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="GimbalManager">
+    <div class="file-header">
+        <div class="file-icon dji">🎮</div>
+        <div class="file-info">
+            <h3>GimbalManager</h3>
+            <div class="path">dji/GimbalManager.kt</div>
+            <div class="desc">雲台角度控制 — 設定俯仰角、等待到位、重置</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>setPitchAngle(angle: Double)</code></td><td>suspend Boolean</td><td>設定雲台俯仰角（10 秒超時，回傳是否到達目標）</td></tr>
+                    <tr><td><code>waitForPitchReady(targetAngle: Double)</code></td><td>suspend Boolean</td><td>等待雲台到位（polling，容差由內部常數 ANGLE_TOLERANCE=3.0 控制）</td></tr>
+                    <tr><td><code>stopRotation()</code></td><td>Unit</td><td>停止雲台旋轉（速度模式歸零）</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 內部屬性</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>currentPitch</code></td><td><code>@Volatile Double</code></td><td>當前雲台俯仰角</td></tr>
+                    <tr><td><code>POLL_INTERVAL_MS</code></td><td>Long</td><td>輪詢間隔 100ms</td></tr>
+                    <tr><td><code>TIMEOUT_MS</code></td><td>Long</td><td>SDK callback 超時 10 秒</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MediaDownloadManager">
+    <div class="file-header">
+        <div class="file-icon dji">📥</div>
+        <div class="file-info">
+            <h3>MediaDownloadManager</h3>
+            <div class="path">dji/MediaDownloadManager.kt</div>
+            <div class="desc">媒體檔案下載 — 串流寫入 MediaStore，避免 OOM</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>downloadLastNPhotos(n: Int = 7)</code></td><td>suspend <code>DownloadResult</code></td><td>下載最近 N 張照片到手機相簿（串流寫入，內部自動切換媒體模式）</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 資料類別</h4>
+            <pre><code><span class="kw">sealed class</span> <span class="ty">DownloadResult</span> {
+    <span class="kw">data class</span> <span class="ty">Success</span>(<span class="kw">val</span> count: <span class="ty">Int</span>) : <span class="ty">DownloadResult</span>()     <span class="cmt">// 下載成功，count = 下載張數</span>
+    <span class="kw">data class</span> <span class="ty">Failure</span>(<span class="kw">val</span> reason: <span class="ty">String</span>) : <span class="ty">DownloadResult</span>() <span class="cmt">// 下載失敗，reason = 失敗原因</span>
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 任務控制 ==================== -->
+<h2 id="mission">⚡ 任務控制</h2>
+
+<div class="file-section" id="MissionStateMachine">
+    <div class="file-header">
+        <div class="file-icon core">⚡</div>
+        <div class="file-info">
+            <h3>MissionStateMachine</h3>
+            <div class="path">mission/MissionStateMachine.kt</div>
+            <div class="desc">⭐ 任務狀態機（系統核心）— 管理任務完整生命週期（1,315 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+            <span class="badge badge-red">核心</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 MissionState 列舉</h4>
+            <pre><code><span class="kw">enum class</span> <span class="ty">MissionState</span> {
+    IDLE,                    <span class="cmt">// 待機</span>
+    TAKING_OFF,              <span class="cmt">// 起飛中</span>
+    FLYING_TO_TARGET,        <span class="cmt">// 飛往目標</span>
+    DESCENDING_TO_ORBIT_ALT, <span class="cmt">// 下降到環繞高度</span>
+    ORBITING,                <span class="cmt">// B 模式環繞錄影</span>
+    SPIRAL_ASCENDING,        <span class="cmt">// C/D 模式螺旋上升錄影</span>
+    RECORDING_360,           <span class="cmt">// A 模式原地旋轉錄影</span>
+    SHOOTING_PHOTOS,         <span class="cmt">// 拍照序列</span>
+    GIMBAL_PULL_UP,          <span class="cmt">// C/D 結束雲台拉平過渡</span>
+    FLYING_TO_NEXT,          <span class="cmt">// Multi-Stop 站間飛行</span>
+    RETURNING_HOME,          <span class="cmt">// 返航中</span>
+    ERROR                    <span class="cmt">// 錯誤（90 秒後自動重置）</span>
+}</code></pre>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 StateFlow</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>state</code></td><td><code>StateFlow&lt;MissionState&gt;</code></td><td>當前任務狀態（對外暴露）</td></tr>
+                    <tr><td><code>multiStopProgress</code></td><td><code>StateFlow&lt;Pair&lt;Int, Int&gt;?&gt;</code></td><td>多站進度 (current 1-based, total)，null=非多站任務。state→IDLE 時自動清除</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>startMission(targetLat, targetLng, targetAlt, missionType, orbitRadius, orbitAlt, orbitGimbalPitch, photoGimbalPitch, photoCount, maxAlt, turns, radiusEnd, orbitSpeed, finalHeading, mqttPayload, msgId)</code></td><td>Unit</td><td>啟動單站任務（A/B/C/D 模式，含 finalHeading）</td></tr>
+                    <tr><td><code>startMultiMission(stops, mqttPayload, msgId)</code></td><td>Unit</td><td>啟動多站任務（自動計算 A 站點總照片數）</td></tr>
+                    <tr><td><code>cancelMission(reason?, mqttMsgId?, mqttAction?)</code></td><td>Unit</td><td>取消任務（安全返航，含 isCancelling 守衛）</td></tr>
+                    <tr><td><code>resetToIdle()</code></td><td>Unit</td><td>強制重置為 IDLE（僅限 ERROR 或已落地狀態）</td></tr>
+                    <tr><td><code>setupSafetyMonitoring(logger)</code></td><td>Unit</td><td>初始化安全監控 → 委派給 <a href="#MissionSafetyMonitor">MissionSafetyMonitor</a></td></tr>
+                    <tr><td><code>logMissionEvent(type, reason, mqttPayload?)</code></td><td>Unit</td><td>記錄任務異常事件</td></tr>
+                    <tr><td><code>dispose()</code></td><td>Unit</td><td>取消 scope 並重建（MQTT 斷線時用）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 落地路徑（5 條，landingHandled AtomicBoolean 互斥）</h4>
+            <ol style="padding-left:20px;margin-bottom:12px">
+                <li><strong>Motor-locked callback</strong>（正常）：照片下載 → setState(IDLE) → MQTT ack</li>
+                <li><strong>RTH timeout fallback</strong>（120s）：強制 IDLE + 補救下載</li>
+                <li><strong>cancelMission motor-locked</strong>：取消後落地 → setState(IDLE)</li>
+                <li><strong>cancelMission RTH timeout</strong>（60s）：強制 IDLE</li>
+                <li><strong>ERROR auto-reset</strong>（90s）：resetToIdle</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MissionSafetyMonitor">
+    <div class="file-header">
+        <div class="file-icon core">🛡️</div>
+        <div class="file-info">
+            <h3>MissionSafetyMonitor</h3>
+            <div class="path">mission/MissionSafetyMonitor.kt</div>
+            <div class="desc">任務安全監控 — 從 MissionStateMachine 提取，集中管理 GPS/電池/VS 異常檢測（178 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal class</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 監控項目</h4>
+            <ul style="padding-left:20px">
+                <li><strong>GPS 弱訊號</strong>：10 秒持續弱訊號 → ERROR + RTH</li>
+                <li><strong>電池低於門檻</strong>：觸發 App RTH</li>
+                <li><strong>VirtualStick 控制丟失</strong>：飛行中 VS 停用 → ERROR</li>
+                <li><strong>安全事件去重</strong>：5 秒內同類異常不重複記錄</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="FlightPhaseExecutor">
+    <div class="file-header">
+        <div class="file-icon core">🛫</div>
+        <div class="file-info">
+            <h3>FlightPhaseExecutor</h3>
+            <div class="path">mission/FlightPhaseExecutor.kt</div>
+            <div class="desc">飛行階段執行器 — 起飛/爬升/飛往目標/下降/電量預估</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>performTakeoff(maxRetries: Int = 3)</code></td><td>suspend Unit</td><td>自動起飛（含重試機制 + 高度穩定等待 + VS 啟用）</td></tr>
+                    <tr><td><code>climbToAltitude(targetAlt: Double)</code></td><td>suspend Unit</td><td>爬升到指定高度（VirtualStick 垂直控制，含減速區）</td></tr>
+                    <tr><td><code>flyToTarget(targetLat, targetLng, targetAlt)</code></td><td>suspend Unit</td><td>飛往目標座標（比例控制速度 + yaw 對齊）</td></tr>
+                    <tr><td><code>flyToNextStop(targetLat, targetLng, targetAlt)</code></td><td>suspend Unit</td><td>Multi-Stop 站間飛行（FLYING_TO_NEXT 狀態）</td></tr>
+                    <tr><td><code>descendToAltitude(targetAlt, param)</code></td><td>suspend Unit</td><td>下降到環繞高度</td></tr>
+                    <tr><td><code>rotateYawForPhoto(degrees: Double)</code></td><td>suspend Unit</td><td>Yaw 旋轉拍照（不含 VS 管理）</td></tr>
+                    <tr><td><code>estimateRemainingFlightBattery(fromLat, fromLng, toLat, toLng, missionTargetAlt)</code></td><td>Int</td><td>預估從起點飛到目標再返航所需電量 (%)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="OrbitController">
+    <div class="file-header">
+        <div class="file-icon core">🔄</div>
+        <div class="file-info">
+            <h3>OrbitController</h3>
+            <div class="path">mission/OrbitController.kt</div>
+            <div class="desc">環繞飛行控制入口 — 委派給 OrbitModeA/B/C/D 執行，共用輔助函式在 OrbitHelpers（63 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>executeInPlaceRotation(gimbalPitch, param, targetAlt, orbitSpeedMultiplier)</code></td><td>suspend Unit</td><td>A 模式 → <a href="#OrbitModeA">OrbitModeA</a></td></tr>
+                    <tr><td><code>executeOrbitPhase(centerLat, centerLng, orbitAlt, orbitRadius, gimbalPitch, param, orbitSpeedMultiplier)</code></td><td>suspend Unit</td><td>B 模式 → <a href="#OrbitModeB">OrbitModeB</a></td></tr>
+                    <tr><td><code>executeSpiralAscent(centerLat, centerLng, zMin, zMax, orbitRadius, turns, param, orbitSpeedMultiplier, finalHeading)</code></td><td>suspend Unit</td><td>C 模式 → <a href="#OrbitModeC">OrbitModeC</a></td></tr>
+                    <tr><td><code>executeExpandingSpiral(centerLat, centerLng, zMin, zMax, rStart, rEnd, turns, param, orbitSpeedMultiplier, finalHeading)</code></td><td>suspend Unit</td><td>D 模式 → <a href="#OrbitModeD">OrbitModeD</a></td></tr>
+                </tbody>
+            </table>
+            <p style="margin-top:8px">各模式實作已拆分至獨立檔案。共用輔助函式（SmoothState、applySmoothing、視覺預選取、yaw 居中）提取至 <a href="#OrbitHelpers">OrbitHelpers</a>。</p>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="OrbitHelpers">
+    <div class="file-header">
+        <div class="file-icon core">🧰</div>
+        <div class="file-info">
+            <h3>OrbitHelpers</h3>
+            <div class="path">mission/OrbitHelpers.kt</div>
+            <div class="desc">環繞飛行共用輔助函式（198 行） — 被 A/B/C/D 四種模式共用</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>applySmoothing(state, rawPitch, rawRoll, rawYaw, yawAlpha)</code></td><td>Unit</td><td>EMA 低通濾波 pitch/roll/yaw，首幀直接採用</td></tr>
+                    <tr><td><code>waitForVisualTargetSelection()</code></td><td>suspend Unit</td><td>視覺目標選取等待窗（2 秒）</td></tr>
+                    <tr><td><code>adjustYawToCenterTarget(param)</code></td><td>suspend Unit</td><td>視覺 Yaw 居中（5 秒 timeout）</td></tr>
+                    <tr><td><code>visualPreSelection(centerLat, centerLng, orbitRadius, originalGimbalPitch, param)</code></td><td>suspend Unit</td><td>視覺預選取完整流程（偏移點→選取→居中→飛回起點）</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 內部型別</h4>
+            <ul style="padding-left:20px">
+                <li><code>SmoothState(pitch, roll, yaw, initialized)</code> — 指令平滑化狀態，首幀直接採用後續 EMA 濾波</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="OrbitModeA">
+    <div class="file-header">
+        <div class="file-icon core">🅰️</div>
+        <div class="file-info">
+            <h3>OrbitModeA</h3>
+            <div class="path">mission/OrbitModeA.kt</div>
+            <div class="desc">A 模式：原地 yaw 旋轉 360° 錄影（166 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>execute(gimbalPitch, param, targetAlt, orbitSpeedMultiplier)</code></td><td>suspend Unit</td><td>原地 360° yaw 旋轉錄影（12°/s，一圈 ~30s）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="OrbitModeB">
+    <div class="file-header">
+        <div class="file-icon core">🅱️</div>
+        <div class="file-info">
+            <h3>OrbitModeB</h3>
+            <div class="path">mission/OrbitModeB.kt</div>
+            <div class="desc">B 模式：環繞目標 360° 錄影（351 行） — 含視覺預選取、PI Yaw 控制、PD 徑向修正</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>execute(centerLat, centerLng, orbitAlt, orbitRadius, gimbalPitch, param, orbitSpeedMultiplier)</code></td><td>suspend Unit</td><td>環繞目標 360° 錄影（鏡頭朝向中心）</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 控制演算法</h4>
+            <ul style="padding-left:20px">
+                <li>水平：切線速度 + 徑向 PD 修正，合成後<strong>歸一化</strong>（保持恆定速度大小、只調方向，抑制徑向修正造成的速度脈衝 → 錄影抖動）</li>
+                <li>Yaw：PI 控制器 + Bearing Rate 前饋（<code>ORBIT_YAW_KP=0.4, ORBIT_YAW_KI=0.03</code>）</li>
+                <li>視覺輔助：<code>VisualYawAssist</code> SAD 模板匹配修正 yaw</li>
+                <li>電池中止：每 90° 檢查電量，≤ 有效 RTH 門檻 → <code>cancelMission()</code> 明確進入 RTH</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="OrbitModeC">
+    <div class="file-header">
+        <div class="file-icon core">©️</div>
+        <div class="file-info">
+            <h3>OrbitModeC</h3>
+            <div class="path">mission/OrbitModeC.kt</div>
+            <div class="desc">C 模式：螺旋上升環繞錄影（533 行） — 固定半徑、動態雲台、ramp-up 啟動加速、final_heading 弧段延伸</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>execute(centerLat, centerLng, zMin, zMax, orbitRadius, turns, param, orbitSpeedMultiplier, finalHeading)</code></td><td>suspend Unit</td><td>螺旋上升 N 圈（Z_min→Z_max），可選 final_heading 弧段延伸後抬升雲台</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 Phase 流程（10 階段）</h4>
+            <ol style="padding-left:20px;margin-bottom:12px">
+                <li>初始雲台角度（依 Z_min 計算）</li>
+                <li>相機設定（錄影模式 + 自動對焦）</li>
+                <li>飛至螺旋起點（中心北方 orbitRadius 處）</li>
+                <li>視覺預選取</li>
+                <li>開始錄影 + 螺旋上升迴圈（ramp-up 啟動加速 + 迭代角度累積 + 動態雲台 + PD 徑向修正（合成後<strong>歸一化</strong>）+ PI Yaw + 每 90° 電池檢查 → ≤ 門檻即 <code>cancelMission()</code> 進入 RTH）</li>
+                <li><strong>（新增）</strong> 若 final_heading != null：弧段延伸 — 固定半徑/高度繼續繞行至目標方位角</li>
+                <li>漸進減速（2s ease-out）</li>
+                <li>雲台緩慢拉平（6s，錄影中）</li>
+                <li>定格 1s</li>
+                <li>停止錄影</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="OrbitModeD">
+    <div class="file-header">
+        <div class="file-icon core">Ⓓ</div>
+        <div class="file-info">
+            <h3>OrbitModeD</h3>
+            <div class="path">mission/OrbitModeD.kt</div>
+            <div class="desc">D 模式：擴展螺旋上升錄影（568 行） — 半徑從 rStart 線性增長到 rEnd、ramp-up 啟動加速、final_heading 弧段延伸</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>execute(centerLat, centerLng, zMin, zMax, rStart, rEnd, turns, param, orbitSpeedMultiplier, finalHeading)</code></td><td>suspend Unit</td><td>擴展螺旋上升 N 圈（rStart→rEnd、Z_min→Z_max），可選 final_heading 弧段延伸</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 Phase 流程（10 階段）</h4>
+            <ol style="padding-left:20px;margin-bottom:12px">
+                <li>初始雲台角度（依 Z_min 與 rStart 計算）</li>
+                <li>相機設定</li>
+                <li>飛至螺旋起點</li>
+                <li>視覺預選取</li>
+                <li>開始錄影 + 擴展螺旋上升迴圈（ramp-up 啟動加速 + 迭代角度累積 + 徑向擴展速度 + 速度上限時間重算 + 每 90° 電池檢查 → ≤ 門檻即 <code>cancelMission()</code> 進入 RTH）</li>
+                <li>若 final_heading != null：弧段延伸 — 固定 rEnd 半徑/高度繼續繞行至目標方位角</li>
+                <li>漸進減速（2s ease-out）</li>
+                <li>雲台緩慢拉平（6s，錄影中）</li>
+                <li>定格 1s</li>
+                <li>停止錄影</li>
+            </ol>
+        </div>
+        <div class="member-section">
+            <h4>📌 控制演算法</h4>
+            <ul style="padding-left:20px">
+                <li>水平：切線 + 徑向 PD 修正 + 徑向擴展；切線/徑向修正合成後<strong>歸一化</strong>（擴展分量不參與，維持向外移動），保持恆定速度大小、只調方向</li>
+                <li>速度上限時間重算：幾何角度固定（<code>totalAngleTarget</code> 為 val），總時間 = uncap 區（ω 恆定）+ cap 區（v=capSpeed、弧長 = avgRadius × Δθ）；爬升率 = 高度差 ÷ 實際總時間，確保高度與角度同步完成</li>
+                <li>電池中止：每 90° 檢查電量，≤ 有效 RTH 門檻 → <code>cancelMission()</code> 明確進入 RTH</li>
+                <li>垂直/Yaw/雲台：同 C 模式</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="PhotoSequenceController">
+    <div class="file-header">
+        <div class="file-icon core">📸</div>
+        <div class="file-info">
+            <h3>PhotoSequenceController</h3>
+            <div class="path">mission/PhotoSequenceController.kt</div>
+            <div class="desc">拍照序列控制 — 多角度拍照（每 60° 一張 + 天底一張）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>executePhotoSequence(targetLat, targetLng, photoGimbalPitch, photoCount)</code></td><td>suspend Unit</td><td>執行拍照序列（Phase 1: 多角度 + Phase 2: 天底）</td></tr>
+                </tbody>
+            </table>
+            <p style="margin-top:8px"><strong>流程：</strong>VS 啟用 → 雲台 <code>photoGimbalPitch</code>° → 每張以定速 yaw 旋轉 <code>360/(photoCount-1)</code>°（<code>YAW_SPEED_DEG_PER_SEC=45</code>°/s） → 拍照 → 最後一張天底（-90°） → VS 停用</p>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="VirtualStickController">
+    <div class="file-header">
+        <div class="file-icon core">🎮</div>
+        <div class="file-info">
+            <h3>VirtualStickController</h3>
+            <div class="path">mission/VirtualStickController.kt</div>
+            <div class="desc">VirtualStick 啟用/停用/監聽 — 含重試機制與狀態監聽</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>enableWithRetry()</code></td><td>suspend Boolean</td><td>啟用 VirtualStick（最多重試 3 次）</td></tr>
+                    <tr><td><code>safeDisable()</code></td><td>suspend Boolean</td><td>安全停用 VirtualStick（連續發 3 次零指令後停用）</td></tr>
+                    <tr><td><code>sendZeroCommand(param)</code></td><td>suspend Unit</td><td>發送歸零指令（pitch/roll/yaw/verticalThrottle 全歸零，重複 3 次）</td></tr>
+                    <tr><td><code>getLastVSError()</code></td><td>String?</td><td>取得最近一次 VS 錯誤訊息（如 "RC_NOT_N_MODE"）</td></tr>
+                    <tr><td><code>removeStateListener()</code></td><td>Unit</td><td>移除 VS 狀態監聽器（internal）</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 內部屬性</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>lastVSState</code></td><td><code>@Volatile VirtualStickState?</code></td><td>最新 VS 狀態</td></tr>
+                    <tr><td><code>vsListener</code></td><td>VirtualStickStateListener?</td><td>目前註冊的監聽器實例</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="VirtualStickParams">
+    <div class="file-header">
+        <div class="file-icon core">🔧</div>
+        <div class="file-info">
+            <h3>VirtualStickParams</h3>
+            <div class="path">mission/VirtualStickParams.kt</div>
+            <div class="desc">VirtualStick 參數工廠 — 建立預設的控制參數物件</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>groundVelocityParams()</code></td><td><code>VirtualStickFlightControlParam</code></td><td>建立預設參數（GROUND 座標系、VELOCITY 模式、歸零）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="VisualYawAssist">
+    <div class="file-header">
+        <div class="file-icon core">👁️</div>
+        <div class="file-info">
+            <h3>VisualYawAssist</h3>
+            <div class="path">mission/VisualYawAssist.kt</div>
+            <div class="desc">視覺輔助 Yaw 修正 — SAD 模板匹配追蹤目標，輸出 yaw 修正值（293 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>selectTarget(nv21Data, width, height, tapX, tapY)</code></td><td>Unit</td><td>從 FPV 幀提取 48×48 模板（Y 平面）</td></tr>
+                    <tr><td><code>processFrame(nv21Data, width, height)</code></td><td>Unit</td><td>每幀 SAD 匹配追蹤（CV Thread 呼叫）</td></tr>
+                    <tr><td><code>getCorrection()</code></td><td>Double</td><td>Yaw 修正值（°/s），無目標或低信心度回傳 0.0</td></tr>
+                    <tr><td><code>hasTarget()</code></td><td>Boolean</td><td>是否已選取目標</td></tr>
+                    <tr><td><code>getConfidence()</code></td><td>Float</td><td>最新信心度（0.0~1.0）</td></tr>
+                    <tr><td><code>beginSelectionWindow()</code></td><td>Unit</td><td>開啟選取等待窗</td></tr>
+                    <tr><td><code>endSelectionWindow()</code></td><td>Unit</td><td>關閉選取等待窗</td></tr>
+                    <tr><td><code>reset()</code></td><td>Unit</td><td>重置所有狀態</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 設計原則</h4>
+            <ul style="padding-left:20px">
+                <li><strong>純加法：</strong>不選目標或追蹤失敗時回傳 0.0，不影響既有 GPS 控制</li>
+                <li><strong>非阻塞：</strong>processFrame 在 CV Thread 執行，getCorrection 在控制迴圈讀取</li>
+                <li><strong>零依賴：</strong>僅使用 Android 原生陣列操作，不需要 OpenCV</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MQTT 通訊 ==================== -->
+<h2 id="mqtt">📡 MQTT 通訊</h2>
+
+<div class="file-section" id="MqttClientManager">
+    <div class="file-header">
+        <div class="file-icon mqtt">📡</div>
+        <div class="file-info">
+            <h3>MqttClientManager</h3>
+            <div class="path">mqtt/MqttClientManager.kt</div>
+            <div class="desc">MQTT 連線管理 — broker 連線、指令訂閱、訊息發布、自動重連</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+            <span class="badge badge-green">Thread-safe</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 StateFlow</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>connectionState</code></td><td><code>StateFlow&lt;ConnectionState&gt;</code></td><td>連線狀態（CONNECTED/DISCONNECTED/CONNECTING）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 回調屬性</h4>
+            <table>
+                <thead><tr><th>屬性</th><th>型態</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>onCommandReceived</code></td><td><code>@Volatile ((CommandPayload) -> Unit)?</code></td><td>飛行指令回調</td></tr>
+                    <tr><td><code>onMissionStartReceived</code></td><td><code>@Volatile ((MissionStartPayload) -> Unit)?</code></td><td>單站任務回調</td></tr>
+                    <tr><td><code>onMultiStartReceived</code></td><td><code>@Volatile ((MultiStopPayload) -> Unit)?</code></td><td>多站任務回調</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>connect()</code></td><td>Unit</td><td>連線到 MQTT broker（非阻塞，內部啟動協程）</td></tr>
+                    <tr><td><code>disconnect()</code></td><td>Unit</td><td>斷線並取消 scope</td></tr>
+                    <tr><td><code>publishMessage(topic, message)</code></td><td>Unit</td><td>發布訊息（自動加 topic prefix）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 內部機制</h4>
+            <ul style="padding-left:20px">
+                <li><strong>LRU 去重：</strong><code>processedMsgIds</code> (LinkedHashSet)，上限 500，超過時移除最舊 200 條</li>
+                <li><strong>Watchdog：</strong>每 10 秒檢查連線，斷線時主動重連</li>
+                <li><strong>Thread-safe：</strong><code>isConnecting</code> AtomicBoolean、<code>@Volatile</code> 標記</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MqttMissionBridge">
+    <div class="file-header">
+        <div class="file-icon mqtt">🌉</div>
+        <div class="file-info">
+            <h3>MqttMissionBridge</h3>
+            <div class="path">mqtt/MqttMissionBridge.kt</div>
+            <div class="desc">MQTT 指令 → 任務轉換 — 驗證指令、執行任務、回報 ACK</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>init()</code></td><td>Unit</td><td>初始化：註冊 MQTT callback（command / mission/start / mission/multi）</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="member-section">
+            <h4>📌 內部方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>handleCommand(payload)</code></td><td>處理 takeoff/rtl/cancel/reset（含狀態守衛）</td></tr>
+                    <tr><td><code>handleMissionStart(payload)</code></td><td>處理單站任務（MissionValidator 驗證 + 距離預檢 + 電量預估）</td></tr>
+                    <tr><td><code>handleMultiStart(payload)</code></td><td>處理多站任務（第一站距離 + 相鄰站距離檢查）</td></tr>
+                    <tr><td><code>publishAck(AckPayload)</code></td><td>發布 ACK 回報（實際定義在 <code>MqttClientManager</code>）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MqttStatusReporter">
+    <div class="file-header">
+        <div class="file-icon mqtt">📊</div>
+        <div class="file-info">
+            <h3>MqttStatusReporter</h3>
+            <div class="path">mqtt/MqttStatusReporter.kt</div>
+            <div class="desc">狀態回報 + 心跳 — 定期發送飛行狀態和心跳包</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>start()</code></td><td>Unit</td><td>啟動狀態回報 + 心跳</td></tr>
+                    <tr><td><code>stop()</code></td><td>Unit</td><td>停止所有回報</td></tr>
+                    <tr><td><code>publishCurrentStatus()</code></td><td>Unit</td><td>立即發布一次狀態</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 回報頻率</h4>
+            <table>
+                <thead><tr><th>項目</th><th>飛行中</th><th>待機</th></tr></thead>
+                <tbody>
+                    <tr><td>狀態回報</td><td>每 10 秒</td><td>每 30 秒</td></tr>
+                    <tr><td>心跳</td><td colspan="2">每 5 秒（不分狀態）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MqttPayloadModels">
+    <div class="file-header">
+        <div class="file-icon mqtt">📦</div>
+        <div class="file-info">
+            <h3>MqttPayloadModels</h3>
+            <div class="path">mqtt/MqttPayloadModels.kt</div>
+            <div class="desc">Payload 資料模型 — 所有 MQTT 訊息的結構定義與解析</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">data classes</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 資料類別</h4>
+            <pre><code><span class="cmt">// 收到的指令（Inbound）</span>
+<span class="kw">data class</span> <span class="ty">CommandPayload</span>(<span class="kw">val</span> msgId: <span class="ty">String</span>, <span class="kw">val</span> cmd: <span class="ty">String</span>, <span class="kw">val</span> timestamp: <span class="ty">Long</span>)
+<span class="kw">data class</span> <span class="ty">MissionTarget</span>(<span class="kw">val</span> lat: <span class="ty">Double</span>, <span class="kw">val</span> lng: <span class="ty">Double</span>, <span class="kw">val</span> alt: <span class="ty">Double</span>)
+<span class="kw">data class</span> <span class="ty">MissionOrbit</span>(
+    <span class="kw">val</span> radius: <span class="ty">Double</span> = <span class="num">0.0</span>, <span class="kw">val</span> alt: <span class="ty">Double?</span> = <span class="kw">null</span>,
+    <span class="kw">val</span> gimbalPitch: <span class="ty">Double</span> = <span class="num">-45.0</span>, <span class="kw">val</span> photoGimbalPitch: <span class="ty">Double</span> = <span class="num">-45.0</span>,
+    <span class="kw">val</span> maxAlt: <span class="ty">Double?</span> = <span class="kw">null</span>, <span class="kw">val</span> turns: <span class="ty">Int?</span> = <span class="kw">null</span>,
+    <span class="kw">val</span> radiusEnd: <span class="ty">Double?</span> = <span class="kw">null</span>, <span class="kw">val</span> orbitSpeed: <span class="ty">Double</span> = <span class="num">1.0</span>,
+    <span class="kw">val</span> finalHeading: <span class="ty">Double?</span> = <span class="kw">null</span>  <span class="cmt">// Mission C/D: 螺旋結束後繞行至此方位角（0°=北，順時針）</span>
+)
+<span class="kw">data class</span> <span class="ty">MissionStartPayload</span>(
+    <span class="kw">val</span> msgId: <span class="ty">String</span>, <span class="kw">val</span> mission: <span class="ty">String</span>, <span class="kw">val</span> target: <span class="ty">MissionTarget</span>,
+    <span class="kw">val</span> orbit: <span class="ty">MissionOrbit?</span>, <span class="kw">val</span> photoCount: <span class="ty">Int</span>, <span class="kw">val</span> timestamp: <span class="ty">Long</span>, <span class="kw">val</span> rawJson: <span class="ty">String</span> = <span class="str">""</span>
+)
+<span class="kw">data class</span> <span class="ty">StopDefinition</span>(<span class="kw">val</span> mission: <span class="ty">String</span>, <span class="kw">val</span> target: <span class="ty">MissionTarget</span>, <span class="kw">val</span> orbit: <span class="ty">MissionOrbit?</span> = <span class="kw">null</span>)
+<span class="kw">data class</span> <span class="ty">MultiStopPayload</span>(
+    <span class="kw">val</span> msgId: <span class="ty">String</span>, <span class="kw">val</span> stops: <span class="ty">List&lt;StopDefinition&gt;</span>, <span class="kw">val</span> timestamp: <span class="ty">Long</span>, <span class="kw">val</span> rawJson: <span class="ty">String</span> = <span class="str">""</span>
+)
+
+<span class="cmt">// 發出的訊息（Outbound）</span>
+<span class="kw">data class</span> <span class="ty">AckPayload</span>(<span class="kw">val</span> msgId: <span class="ty">String</span>, <span class="kw">val</span> action: <span class="ty">String</span>, <span class="kw">val</span> status: <span class="ty">String</span>, <span class="kw">val</span> errorMsg: <span class="ty">String</span> = <span class="str">""</span>)
+<span class="kw">data class</span> <span class="ty">DroneStatusPayload</span>(<span class="kw">val</span> state: <span class="ty">String</span>, <span class="kw">val</span> lat: <span class="ty">Double?</span>, <span class="kw">val</span> lng: <span class="ty">Double?</span>, <span class="kw">val</span> alt: <span class="ty">Double</span>,
+    <span class="kw">val</span> battery: <span class="ty">Int</span>, <span class="kw">val</span> heading: <span class="ty">Double</span>, <span class="kw">val</span> gpsSatellites: <span class="ty">Int?</span>, <span class="kw">val</span> reason: <span class="ty">String</span> = <span class="str">""</span>)
+<span class="kw">data class</span> <span class="ty">HeartbeatPayload</span>(<span class="kw">val</span> online: <span class="ty">Boolean</span> = <span class="kw">true</span>)</code></pre>
+        </div>
+        <div class="member-section">
+            <h4>📌 解析方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>CommandPayload.fromJson(json)</code></td><td><code>CommandPayload?</code></td><td>解析飛行指令（失敗回 null + Log.e）</td></tr>
+                    <tr><td><code>MissionStartPayload.fromJson(json)</code></td><td><code>MissionStartPayload?</code></td><td>解析單站任務（含 orbit 參數驗證）</td></tr>
+                    <tr><td><code>MultiStopPayload.fromJson(json)</code></td><td><code>MultiStopPayload?</code></td><td>解析多站任務（任一站失敗整體回 null）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MissionValidator">
+    <div class="file-header">
+        <div class="file-icon mqtt">✔️</div>
+        <div class="file-info">
+            <h3>MissionValidator</h3>
+            <div class="path">mqtt/MissionValidator.kt</div>
+            <div class="desc">任務驗證器 — 集中驗證單站與各站點的 orbit 參數（158 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>validateSingleMission(payload)</code></td><td><code>String?</code></td><td>驗證單站任務（null = 通過）</td></tr>
+                    <tr><td><code>validateStop(stop)</code></td><td><code>String?</code></td><td>驗證多站任務中的單一站點</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 驗證規則</h4>
+            <ul style="padding-left:20px">
+                <li>B 模式：radius &gt; 0</li>
+                <li>C 模式：radius &ge; 5、max_alt &gt; 0、turns 3-10</li>
+                <li>D 模式：radius &ge; 5、radius_end &gt; radius、max_alt &gt; 0、turns 3-10</li>
+                <li>final_heading：0-360°（C/D 通用）</li>
+                <li>orbit_speed：1.0-5.0（C/D 通用）</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MqttConnectionEventBus">
+    <div class="file-header">
+        <div class="file-icon mqtt">🔗</div>
+        <div class="file-info">
+            <h3>MqttConnectionEventBus</h3>
+            <div class="path">mqtt/MqttConnectionEventBus.kt</div>
+            <div class="desc">MQTT 連線事件匯流排 — 解除 mqtt↔mission 循環依賴（28 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>onConnectionChanged(connected: Boolean)</code></td><td>Unit</td><td>發送連線狀態變更事件</td></tr>
+                    <tr><td><code>connectionEvents</code></td><td><code>SharedFlow&lt;Boolean&gt;</code></td><td>連線事件流（replay=0，新訂閱者只看新事件）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="MqttTopics">
+    <div class="file-header">
+        <div class="file-icon mqtt">📋</div>
+        <div class="file-info">
+            <h3>MqttTopics</h3>
+            <div class="path">mqtt/MqttTopics.kt</div>
+            <div class="desc">MQTT Topic 常數集中管理 — 消除 8 個檔案 50+ 處重複字串（34 行）</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">internal object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 Topic 常數</h4>
+            <table>
+                <thead><tr><th>常數</th><th>值</th><th>方向</th></tr></thead>
+                <tbody>
+                    <tr><td><code>COMMAND</code></td><td><code>{prefix}/command</code></td><td>後端→app</td></tr>
+                    <tr><td><code>MISSION_START</code></td><td><code>{prefix}/mission/start</code></td><td>後端→app</td></tr>
+                    <tr><td><code>MISSION_MULTI</code></td><td><code>{prefix}/mission/multi</code></td><td>後端→app</td></tr>
+                    <tr><td><code>STATUS</code></td><td><code>{prefix}/status</code></td><td>app→後端</td></tr>
+                    <tr><td><code>ACK</code></td><td><code>{prefix}/ack</code></td><td>app→後端</td></tr>
+                    <tr><td><code>HEARTBEAT</code></td><td><code>{prefix}/heartbeat</code></td><td>app→後端</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 安全監控 ==================== -->
+<h2 id="safety">🛡️ 安全監控</h2>
+
+<div class="file-section" id="SafetyEventLogger">
+    <div class="file-header">
+        <div class="file-icon safety">📋</div>
+        <div class="file-info">
+            <h3>SafetyEventLogger</h3>
+            <div class="path">safety/SafetyEventLogger.kt</div>
+            <div class="desc">安全事件記錄 — CSV 格式寫入本地檔案</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>logAnomaly(record: SafetyAnomalyRecord)</code></td><td>Unit</td><td>記錄異常事件到 CSV（@Synchronized）</td></tr>
+                    <tr><td><code>getRecentAnomalies(count)</code></td><td><code>List&lt;SafetyAnomalyRecord&gt;</code></td><td>讀取最近 N 條記錄</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="SafetyAnomalyType">
+    <div class="file-header">
+        <div class="file-icon safety">⚠️</div>
+        <div class="file-info">
+            <h3>SafetyAnomalyType</h3>
+            <div class="path">safety/SafetyAnomalyType.kt</div>
+            <div class="desc">安全異常類型列舉</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">enum</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <pre><code><span class="kw">enum class</span> <span class="ty">SafetyAnomalyType</span>(<span class="kw">val</span> mqttReason: <span class="ty">String</span>) {
+    <span class="cmt">// 安全異常</span>
+    LOW_BATTERY_RTH(<span class="str">"firmware_low_battery_rth"</span>),      <span class="cmt">// 電池 ≤ 30%，觸發返航</span>
+    BATTERY_FORCED_LAND(<span class="str">"firmware_forced_landing"</span>),    <span class="cmt">// 電池 ≤ 15%，韌體強制降落</span>
+    FIRMWARE_RTH(<span class="str">"firmware_rth"</span>),                      <span class="cmt">// 韌體自行觸發返航（風速/訊號）</span>
+    GPS_SIGNAL_WEAK(<span class="str">"gps_signal_degraded"</span>),            <span class="cmt">// GPS 訊號弱</span>
+    GPS_SIGNAL_LOST(<span class="str">"gps_signal_lost"</span>),                <span class="cmt">// GPS 訊號遺失</span>
+    <span class="cmt">// 任務異常</span>
+    MISSION_CANCELLED(<span class="str">"mission_cancelled"</span>),             <span class="cmt">// 任務被取消</span>
+    MISSION_VALIDATION_FAIL(<span class="str">"mission_validation_failed"</span>), <span class="cmt">// 參數驗證失敗</span>
+    MISSION_ERROR(<span class="str">"mission_error"</span>),                     <span class="cmt">// 任務執行錯誤</span>
+    SPIRAL_TIMEOUT(<span class="str">"spiral_timeout"</span>),                   <span class="cmt">// 螺旋超時</span>
+    ORBIT_FLYAWAY(<span class="str">"orbit_flyaway"</span>),                     <span class="cmt">// 環繞 flyaway 偵測</span>
+    BATTERY_ABORT(<span class="str">"battery_abort"</span>),                     <span class="cmt">// 電量不足提前返航</span>
+    RTH_FAILED(<span class="str">"rth_failed"</span>),                           <span class="cmt">// 返航失敗</span>
+    VIRTUAL_STICK_FAILED(<span class="str">"virtual_stick_failed"</span>)        <span class="cmt">// VS 啟用失敗</span>
+}</code></pre>
+    </div>
+</div>
+
+<!-- ==================== 工具類別 ==================== -->
+<h2 id="util">🔧 工具類別</h2>
+
+<div class="file-section" id="GeoMath">
+    <div class="file-header">
+        <div class="file-icon util">📐</div>
+        <div class="file-info">
+            <h3>GeoMath</h3>
+            <div class="path">util/GeoMath.kt</div>
+            <div class="desc">GPS 數學計算 — Haversine 距離、方位角、目標點計算</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>回傳</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>haversine(lat1, lng1, lat2, lng2)</code></td><td>Double</td><td>兩點距離 (m)，使用 Haversine 公式</td></tr>
+                    <tr><td><code>calculateBearing(lat1, lng1, lat2, lng2)</code></td><td>Double</td><td>從點 1 到點 2 的方位角 (°, 0=北)</td></tr>
+                    <tr><td><code>calculateDestinationPoint(lat, lng, bearingDeg, distanceM)</code></td><td><code>Pair&lt;Double, Double&gt;</code></td><td>從給定點沿方位角移動指定距離後的座標</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="member-section">
+            <h4>📌 使用範例</h4>
+            <pre><code><span class="cmt">// 計算兩點距離</span>
+<span class="kw">val</span> dist = <span class="ty">GeoMath</span>.<span class="fn">haversine</span>(<span class="num">24.939</span>, <span class="num">121.347</span>, <span class="num">24.940</span>, <span class="num">121.348</span>)
+<span class="cmt">// → 約 150 公尺</span>
+
+<span class="cmt">// 計算方位角</span>
+<span class="kw">val</span> bearing = <span class="ty">GeoMath</span>.<span class="fn">calculateBearing</span>(<span class="num">24.939</span>, <span class="num">121.347</span>, <span class="num">24.940</span>, <span class="num">121.348</span>)
+<span class="cmt">// → 約 48° (東北方)</span>
+
+<span class="cmt">// 從某點向北移動 100m</span>
+<span class="kw">val</span> (newLat, newLng) = <span class="ty">GeoMath</span>.<span class="fn">calculateDestinationPoint</span>(<span class="num">24.939</span>, <span class="num">121.347</span>, <span class="num">0.0</span>, <span class="num">100.0</span>)</code></pre>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="AppLog">
+    <div class="file-header">
+        <div class="file-icon util">📝</div>
+        <div class="file-info">
+            <h3>AppLog</h3>
+            <div class="path">util/AppLog.kt</div>
+            <div class="desc">Log wrapper — debug 級別在 release build 靜默</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">object</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 公開方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>說明</th><th>Release 行為</th></tr></thead>
+                <tbody>
+                    <tr><td><code>d(tag, message)</code></td><td>Debug log</td><td>靜默</td></tr>
+                    <tr><td><code>i(tag, message)</code></td><td>Info log</td><td>靜默</td></tr>
+                    <tr><td><code>w(tag, message)</code></td><td>Warning log</td><td>輸出</td></tr>
+                    <tr><td><code>e(tag, message)</code></td><td>Error log</td><td>輸出</td></tr>
+                </tbody>
+            </table>
+            <div style="margin-top:12px" class="alert alert-info">
+                <strong>使用規則：</strong>所有 debug/info 級別的 log 必須使用 <code>AppLog</code> 而非 <code>Log</code>。error/warning 級別可直接用 <code>Log</code>。
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== UI 介面 ==================== -->
+<h2 id="ui">📱 UI 介面</h2>
+
+<div class="file-section" id="MissionControlActivity">
+    <div class="file-header">
+        <div class="file-icon ui">🖥️</div>
+        <div class="file-info">
+            <h3>MissionControlActivity</h3>
+            <div class="path">MissionControlActivity.kt</div>
+            <div class="desc">全螢幕 FPV + HUD 儀表板（landscape）— 即時飛行數據、任務狀態、MQTT 連線指示</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-blue">Activity</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 核心職責</h4>
+            <ul style="padding-left:20px">
+                <li><strong>FPV 串流：</strong>透過 SurfaceHolder 顯示 DJI 即時影像</li>
+                <li><strong>HUD 儀表板：</strong>觀察 FlightManager StateFlow 更新電池/GPS/高度/距離/座標</li>
+                <li><strong>視覺選取：</strong>觸控 FPV 畫面 → 呼叫 <code>VisualYawAssist.selectTarget()</code> 選取追蹤目標</li>
+                <li><strong>任務控制：</strong>取消任務按鈕、任務狀態文字顯示</li>
+                <li><strong>MQTT 狀態：</strong>觀察 <code>MqttClientManager.connectionState</code> 顯示連線指示燈</li>
+            </ul>
+        </div>
+        <div class="member-section">
+            <h4>📌 關鍵方法</h4>
+            <table>
+                <thead><tr><th>方法</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>onFpvTapped(x, y)</code></td><td>FPV 觸控事件 → 將觸控座標傳給 VisualYawAssist 選取目標</td></tr>
+                    <tr><td><code>observeFlows()</code></td><td>訂閱所有 StateFlow 更新 HUD 文字（電池、GPS、高度、距離、座標、任務狀態）</td></tr>
+                    <tr><td><code>updateVisualTrackHud()</code></td><td>更新視覺追蹤狀態指示（信心度、是否有目標）</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="file-section" id="SettingsActivity">
+    <div class="file-header">
+        <div class="file-icon ui">⚙️</div>
+        <div class="file-info">
+            <h3>SettingsActivity</h3>
+            <div class="path">settings/SettingsActivity.kt</div>
+            <div class="desc">設定頁面 — MQTT 連線、飛行限制、電池門檻、RC 模式、GPS 濾波、磁偏角</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-blue">Activity</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <div class="member-section">
+            <h4>📌 設定項目</h4>
+            <table>
+                <thead><tr><th>分類</th><th>設定項</th><th>說明</th></tr></thead>
+                <tbody>
+                    <tr><td>MQTT</td><td>Broker URI / Topic Prefix / Username / Password</td><td>MQTT 連線設定（SharedPreferences 儲存）</td></tr>
+                    <tr><td>飛行限制</td><td>最大高度 / 最大半徑 / 返航高度 / 安全起飛高度</td><td>寫入飛控的安全參數</td></tr>
+                    <tr><td>電池</td><td>App RTH 門檻 (20~50%)</td><td>低電量自動返航門檻</td></tr>
+                    <tr><td>速度</td><td>最大飛行速度 (1~13 m/s) / 速度增益 (0.1~1.0)</td><td>控制響應靈敏度</td></tr>
+                    <tr><td>RC</td><td>搖桿模式 (USA/JP/CH)</td><td>遙控器搖桿映射</td></tr>
+                    <tr><td>GPS</td><td>EMA 濾波係數 (0.2~0.8) / 指令平滑係數 (0.3~0.8)</td><td>環繞精度調參</td></tr>
+                    <tr><td>磁偏角</td><td>磁偏角補償值 (°)</td><td>Yaw 方位角校正</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 任務案例 ==================== -->
+<h2>🎯 任務案例 — 完整執行流程追蹤</h2>
+<p>以下四個案例追蹤任務 A/B/C/D 從收到 MQTT 指令到返航降落的完整程式碼路徑。標註每個步驟涉及的檔案、方法和關鍵程式碼行。</p>
+
+<!-- 任務 A -->
+<div class="file-section" id="case-mission-a">
+    <div class="file-header">
+        <div class="file-icon core" style="background:#1a73e8">A</div>
+        <div class="file-info">
+            <h3>任務 A — 原地旋轉錄影 + 多角度拍照</h3>
+            <div class="desc">最基礎的任務模式。飛到目標 → 原地 360° yaw 旋轉錄影 → 7 張多角度拍照 → 返航</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-blue">radius = 0</span>
+            <span class="badge badge-green">最基礎</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <h4>📥 Step 1：收到 MQTT 指令</h4>
+        <div class="diagram" style="background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;font-family:monospace;font-size:13px;line-height:1.6;overflow-x:auto;margin-bottom:16px">
+後端發送 → <span style="color:#ce9178">{prefix}/mission/start</span>
+{
+    <span style="color:#9cdcfe">"msg_id"</span>: <span style="color:#ce9178">"msn_001"</span>,
+    <span style="color:#9cdcfe">"mission"</span>: <span style="color:#ce9178">"A"</span>,
+    <span style="color:#9cdcfe">"target"</span>: { <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">24.939</span>, <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.347</span>, <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">15.0</span> },
+    <span style="color:#9cdcfe">"orbit"</span>: { <span style="color:#9cdcfe">"gimbal_pitch"</span>: <span style="color:#b5cea8">-45</span>, <span style="color:#9cdcfe">"photo_gimbal_pitch"</span>: <span style="color:#b5cea8">-30</span> },
+    <span style="color:#9cdcfe">"photo_count"</span>: <span style="color:#b5cea8">7</span>
+}</div>
+
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-blue">1.1</span></td>
+                    <td><code>MqttClientManager.kt</code></td>
+                    <td><code>messageArrived()</code></td>
+                    <td>Paho 回調收到訊息 → LRU 去重 → <code>onMissionStartReceived</code> 回調</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-blue">1.2</span></td>
+                    <td><code>MqttPayloadModels.kt</code></td>
+                    <td><code>MissionStartPayload.fromJson()</code></td>
+                    <td>解析 JSON → 驗證 mission/target/orbit/photoCount → 回傳 Payload 或 null</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-blue">1.3</span></td>
+                    <td><code>MqttMissionBridge.kt</code></td>
+                    <td><code>handleMissionStart()</code></td>
+                    <td>MissionValidator 參數驗證 + 距離預檢 + GPS 就緒檢查 → 回 <code>accepted</code> ACK → 呼叫 <code>startMission()</code> → 任務完成後發送 <code>success</code> ACK</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>🛫 Step 2：起飛與飛行</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>狀態</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-green">2.1</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>startMission()</code></td>
+                    <td><span class="badge badge-gray">驗證</span></td>
+                    <td>IDLE 守衛 → GPS 檢查 → 距離預檢查 → 電量預估 → 立即 setState(TAKING_OFF)</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.2</span></td>
+                    <td><code>FlightPhaseExecutor.kt</code></td>
+                    <td><code>performTakeoff()</code></td>
+                    <td><span class="badge badge-green">TAKING_OFF</span></td>
+                    <td><code>FlightManager.takeOff()</code> → 等高度穩定 3 次讀數 → 15 秒超時</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.3</span></td>
+                    <td><code>FlightPhaseExecutor.kt</code></td>
+                    <td><code>climbToAltitude(15.0)</code></td>
+                    <td><span class="badge badge-green">TAKING_OFF</span></td>
+                    <td>VirtualStick <code>verticalThrottle = 5.0 m/s</code>（CLIMB_THROTTLE）→ 到達目標高度 → 歸零</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.4</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>startMission()</code> 內 yaw 對齊</td>
+                    <td><span class="badge badge-green">TAKING_OFF</span></td>
+                    <td>Yaw 旋轉讓機頭朝向目標 → <code>YAW_ALIGN_PROPORTIONAL_GAIN = 0.8</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.5</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>flyToTarget()</code></td>
+                    <td><span class="badge badge-blue">FLYING_TO_TARGET</span></td>
+                    <td>比例控制速度：<code>speed = max(min(dist × gain, maxSpeed), 1.0)</code> → 距離 < 2m 停止</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>🎬 Step 3：原地旋轉錄影（A 模式核心）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>狀態</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-purple">3.1</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>executeStopCore()</code></td>
+                    <td>—</td>
+                    <td>判斷 <code>missionType == "A"</code>（非 B 非 C）→ 呼叫 <code>OrbitController.executeInPlaceRotation()</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.2</span></td>
+                    <td><code>GimbalManager.kt</code></td>
+                    <td><code>setPitchAngle(-45)</code></td>
+                    <td>—</td>
+                    <td>設定雲台俯仰角 -45°（錄影用）→ 等待到位</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.3</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>startVideoRecord()</code></td>
+                    <td>—</td>
+                    <td>切換錄影模式 → 開始錄影 → 6 秒 SD 卡寫入等待</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.4</span></td>
+                    <td><code>OrbitController.kt</code></td>
+                    <td><code>executeInPlaceRotation()</code></td>
+                    <td><span class="badge badge-purple">RECORDING_360</span></td>
+                    <td><code>yaw = 12°/s</code>（錄影用慢速）→ 累計 370° → 高度 P 控制器維持穩定</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.5</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>stopVideoRecord()</code></td>
+                    <td>—</td>
+                    <td>停止錄影</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.6</span></td>
+                    <td><code>GimbalManager.kt</code></td>
+                    <td><code>resetGimbal()</code></td>
+                    <td>—</td>
+                    <td>重置雲台水平 0°</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>📸 Step 4：多角度拍照</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-orange">4.1</span></td>
+                    <td><code>PhotoSequenceController.kt</code></td>
+                    <td><code>executePhotoSequence(targetLat, targetLng, -30°, 7)</code></td>
+                    <td>VS 啟用一次 → 雲台 -30° → Phase 1：每 60° 拍一張（6 張，yaw 比例控制朝向目標）→ Phase 2：雲台 -90° 拍天底 → VS 停用</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">4.2</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>takePhoto()</code> × 7</td>
+                    <td>每次拍照：切換拍照模式 → 觸發拍照 → 等待 SD 卡寫入</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">4.3</span></td>
+                    <td><code>FlightPhaseExecutor.kt</code></td>
+                    <td><code>rotateYawForPhoto()</code> × 6</td>
+                    <td>每張旋轉 <code>360/6 = 60°</code> → <code>PHOTO_ROTATION_TARGET_DEG = 58°</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>🏠 Step 5：返航</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>狀態</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-red">5.1</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>executeMission()</code></td>
+                    <td><span class="badge badge-orange">RETURNING_HOME</span></td>
+                    <td>VS 停用 → <code>FlightManager.startRTH()</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">5.2</span></td>
+                    <td><code>FlightManager.kt</code></td>
+                    <td><code>onMotorLockedCallback</code></td>
+                    <td>—</td>
+                    <td>DJI 回調確認降落 → 觸發照片下載</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">5.3</span></td>
+                    <td><code>MediaDownloadManager.kt</code></td>
+                    <td><code>downloadLastNPhotos(7)</code></td>
+                    <td>—</td>
+                    <td>切換媒體模式 → 拉取檔案列表 → 串流下載 7 張 → 切回拍照模式</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">5.4</span></td>
+                    <td><code>MqttMissionBridge.kt</code></td>
+                    <td><code>publishAck()</code></td>
+                    <td><span class="badge badge-green">IDLE</span></td>
+                    <td>setState(IDLE) → 發送 <code>success</code> ACK → 狀態回報</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>📊 完整狀態流轉</h4>
+        <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;text-align:center;margin-bottom:12px">
+            IDLE → <span style="color:#0d904f">TAKING_OFF</span> → <span style="color:#1a73e8">FLYING_TO_TARGET</span> → <span style="color:#7c3aed">RECORDING_360</span> → <span style="color:#e37400">SHOOTING_PHOTOS</span> → <span style="color:#e37400">RETURNING_HOME</span> → <span style="color:#0d904f">IDLE</span>
+        </div>
+    </div>
+</div>
+
+<!-- 任務 B -->
+<div class="file-section" id="case-mission-b">
+    <div class="file-header">
+        <div class="file-icon core" style="background:#7c3aed">B</div>
+        <div class="file-info">
+            <h3>任務 B — 環繞飛行錄影</h3>
+            <div class="desc">飛到目標 → 以指定半徑順時針環繞 360° 錄影（鏡頭朝向中心）→ 返航</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-purple">radius > 0</span>
+            <span class="badge badge-orange">環繞控制</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <h4>📥 Step 1：收到 MQTT 指令（與 A 相同）</h4>
+        <div style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            <code>MqttClientManager</code> → <code>MissionStartPayload.fromJson()</code> → <code>MqttMissionBridge.handleMissionStart()</code><br>
+            <strong>B 模式額外驗證：</strong><code>orbit.radius > 0</code>（必填，否則拒絕執行）
+        </div>
+
+        <h4>🛫 Step 2：起飛與飛行（與 A 相同）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr><td>2.1</td><td><code>MissionStateMachine.kt</code></td><td><code>startMission()</code></td><td>驗證 → TAKING_OFF → 起飛 → 爬升 → Yaw 對齊</td></tr>
+                <tr><td>2.2</td><td><code>FlightPhaseExecutor.kt</code></td><td><code>flyToTarget()</code></td><td>飛往目標座標 → FLYING_TO_TARGET</td></tr>
+                <tr><td>2.3</td><td><code>MissionStateMachine.kt</code></td><td><code>descendToAltitude()</code></td><td>若 <code>orbit.alt < 當前高度</code> → DESCENDING_TO_ORBIT_ALT</td></tr>
+            </tbody>
+        </table>
+
+        <h4>🔄 Step 3：環繞飛行錄影（B 模式核心）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>狀態</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-purple">3.1</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>executeStopCore()</code></td>
+                    <td>—</td>
+                    <td>判斷 <code>missionType == "B" && orbitRadius > 0</code> → 呼叫 <code>OrbitController.executeOrbitPhase()</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.2</span></td>
+                    <td><code>OrbitController.kt</code></td>
+                    <td><code>executeOrbitPhase()</code></td>
+                    <td>—</td>
+                    <td>飛到環繞起點（目標北方 radius 處）→ 用 <code>getMaxFlightSpeed()</code> + <code>getSpeedGain()</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.3</span></td>
+                    <td><code>GimbalManager.kt</code></td>
+                    <td><code>setPitchAngle(-45)</code></td>
+                    <td>—</td>
+                    <td>設定雲台俯仰角（錄影用）</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.4</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>startVideoRecord()</code></td>
+                    <td>—</td>
+                    <td>開始錄影</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.5</span></td>
+                    <td><code>OrbitController.kt</code></td>
+                    <td>環繞迴圈</td>
+                    <td><span class="badge badge-purple">ORBITING</span></td>
+                    <td>
+                        <strong>水平控制：</strong>切線速度 + 徑向 PD 修正（合成後<strong>歸一化</strong>，保持恆定速度大小、只調方向，抑制徑向修正速度脈衝）<br>
+                        <strong>Yaw 控制：</strong>PI 控制器朝向中心（<code>ORBIT_YAW_KP=0.4, ORBIT_YAW_KI=0.03</code>）<br>
+                        <strong>速度上限：</strong><code>MAX_FLIGHT_SPEED_MAX = 13.0 m/s</code>（硬體上限）<br>
+                        <strong>完成判定：</strong>累計角度 ≥ 370°（含 10° buffer）<br>
+                        <strong>Flyaway 防護：</strong>每 50 次迭代檢查半徑是否超過 <code>radius × 2.5</code><br>
+                        <strong>電池檢查：</strong>每 90° 檢查一次電量，≤ 有效 RTH 門檻 → <code>cancelMission()</code> 明確進入 RTH
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.6</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>stopVideoRecord()</code></td>
+                    <td>—</td>
+                    <td>停止錄影</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">3.7</span></td>
+                    <td><code>GimbalManager.kt</code></td>
+                    <td><code>resetGimbal()</code></td>
+                    <td>—</td>
+                    <td>重置雲台水平</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>🏠 Step 4：返航（與 A 相同，但不下載照片）</h4>
+        <div style="background:#fef7e0;padding:12px;border-radius:8px;font-size:13px;margin-bottom:12px">
+            <strong>⚠️ B 模式差異：</strong>返航後<strong>不下載照片</strong>（只有錄影影片）。<code>missionType == "B"</code> 時跳過 <code>downloadLastNPhotos()</code>。
+        </div>
+
+        <h4>📊 完整狀態流轉</h4>
+        <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;text-align:center">
+            IDLE → <span style="color:#0d904f">TAKING_OFF</span> → <span style="color:#1a73e8">FLYING_TO_TARGET</span> → <span style="color:#e37400">DESCENDING_TO_ORBIT_ALT</span> → <span style="color:#7c3aed">ORBITING</span> → <span style="color:#e37400">RETURNING_HOME</span> → <span style="color:#0d904f">IDLE</span>
+        </div>
+
+        <h4>🔧 涉及的關鍵程式碼差異（相對 A 模式）</h4>
+        <table>
+            <thead><tr><th>差異點</th><th>A 模式</th><th>B 模式</th></tr></thead>
+            <tbody>
+                <tr><td>executeStopCore 分支</td><td><code>else</code>（預設）</td><td><code>missionType == "B" && radius > 0</code></td></tr>
+                <tr><td>核心方法</td><td><code>executeInPlaceRotation()</code></td><td><code>executeOrbitPhase()</code></td></tr>
+                <tr><td>速度控制</td><td>固定 <code>12°/s</code> yaw</td><td>切線 + 徑向 PD 修正，上限 13 m/s（硬體上限）</td></tr>
+                <tr><td>Yaw 控制</td><td>固定角速度</td><td>PI 控制器朝向中心</td></tr>
+                <tr><td>拍照</td><td>有（7 張多角度）</td><td>無</td></tr>
+                <tr><td>返航後下載</td><td>有（7 張照片）</td><td>無</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 任務 C -->
+<div class="file-section" id="case-mission-c">
+    <div class="file-header">
+        <div class="file-icon core" style="background:#ff6d00">C</div>
+        <div class="file-info">
+            <h3>任務 C — 螺旋上升鎖定中心拍攝</h3>
+            <div class="desc">飛到目標 → 螺旋上升 N 圈錄影（ramp-up 啟動加速、動態雲台、可選 final_heading 弧段延伸 → GIMBAL_PULL_UP）→ 返航</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-orange">radius ≥ 5</span>
+            <span class="badge badge-orange">turns 3-10</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <h4>📥 Step 1：收到 MQTT 指令</h4>
+        <div class="diagram" style="background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;font-family:monospace;font-size:13px;line-height:1.6;overflow-x:auto;margin-bottom:16px">
+{
+    <span style="color:#9cdcfe">"mission"</span>: <span style="color:#ce9178">"C"</span>,
+    <span style="color:#9cdcfe">"target"</span>: { <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">24.939</span>, <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.347</span>, <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">15.0</span> },
+    <span style="color:#9cdcfe">"orbit"</span>: {
+        <span style="color:#9cdcfe">"radius"</span>: <span style="color:#b5cea8">15</span>,               <span style="color:#6a9955">// ≥ 5m</span>
+        <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">10.0</span>,               <span style="color:#6a9955">// 起始高度 Z_min</span>
+        <span style="color:#9cdcfe">"gimbal_pitch"</span>: <span style="color:#b5cea8">-45</span>,
+        <span style="color:#9cdcfe">"max_alt"</span>: <span style="color:#b5cea8">30.0</span>,            <span style="color:#6a9955">// 結束高度 Z_max（必填）</span>
+        <span style="color:#9cdcfe">"turns"</span>: <span style="color:#b5cea8">4</span>                  <span style="color:#6a9955">// 旋轉圈數 3-10（必填）</span>
+    }
+}</div>
+        <div style="background:#fef7e0;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            <strong>⚠️ C 模式額外驗證：</strong><code>radius ≥ 5</code>、<code>maxAlt > 0</code>、<code>turns</code> 在 3~10 範圍。任一不滿足則拒絕執行。
+        </div>
+
+        <h4>🛫 Step 2：起飛與飛行（與 A/B 相同）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr><td>2.1</td><td>TAKING_OFF → 起飛 → 爬升到 <code>target.alt (15m)</code></td></tr>
+                <tr><td>2.2</td><td>FLYING_TO_TARGET → 飛往目標座標</td></tr>
+                <tr><td>2.3</td><td>DESCENDING_TO_ORBIT_ALT → 下降到 <code>orbit.alt (10m)</code>（Z_min）</td></tr>
+            </tbody>
+        </table>
+
+        <h4>🌀 Step 3：螺旋上升錄影（C 模式核心）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-orange">3.1</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>executeStopCore()</code></td>
+                    <td>判斷 <code>missionType == "C" && radius > 0 && maxAlt != null && turns != null</code> → 呼叫 <code>OrbitController.executeSpiralAscent()</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">3.2</span></td>
+                    <td><code>OrbitModeC.kt</code></td>
+                    <td><code>execute()</code></td>
+                    <td>
+                        <strong>Phase 1：</strong>設定初始雲台角度 = <code>-arctan((Z_min - 1.7) / radius)</code><br>
+                        <strong>Phase 2：</strong>相機設定（錄影模式 + 自動對焦）<br>
+                        <strong>Phase 3：</strong>飛到環繞起點（目標北方 radius 處）<br>
+                        <strong>Phase 4：</strong>視覺預選取<br>
+                        <strong>Phase 5：</strong>開始錄影
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">3.3</span></td>
+                    <td><code>OrbitModeC.kt</code></td>
+                    <td>螺旋上升迴圈</td>
+                    <td>
+                        <strong>水平控制：</strong>切線速度 + 徑向 PD 修正（合成後<strong>歸一化</strong>，保持恆定速度大小、只調方向，抑制徑向修正速度脈衝）<br>
+                        <strong>電池中止：</strong>每 90° 檢查電量，≤ 有效 RTH 門檻 → <code>cancelMission()</code> 明確進入 RTH<br>
+                        <strong>Ramp-up 啟動加速：</strong>首 1.5s 以 easeInSine（<code>sin(t/T × π/2)</code>）從 0 平滑加速至目標速度，避免電機突然抖動<br>
+                        <strong>垂直控制：</strong><code>verticalThrottle = (climbRate × rampFactor) + (targetAlt - currentAlt) × SPIRAL_ALT_KP</code>，限速 ±5.0 m/s<br>
+                        <strong>Yaw 控制：</strong>PI + Bearing Rate 前饋 + 視覺修正（同 B 模式）<br>
+                        <strong>雲台動態調整：</strong>時間節流 500ms（非阻塞），純幾何公式 <code>gimbalPitch = -atan(h / R) × 180/π</code>（<code>h = 當前高度 - 1.7</code>）<br>
+                        <strong>目標高度追蹤：</strong><code>targetAlt = Z_min + (totalAngle / totalAngleTarget) × (Z_max - Z_min)</code><br>
+                        <strong>Final Heading 弧段延伸：</strong>螺旋完成後若 <code>finalHeading != null</code>，固定半徑/高度 zMax 繼續繞行至目標方位角，再進入雲台拉平
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">3.4</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>stopVideoRecord()</code></td>
+                    <td>停止錄影</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">3.5</span></td>
+                    <td><code>GimbalManager.kt</code></td>
+                    <td><code>resetGimbal()</code></td>
+                    <td>重置雲台水平</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>📈 Step 4：爬升回 target.alt</h4>
+        <div style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            螺旋結束後高度在 <code>Z_max (30m)</code>，但 <code>target.alt = 15m</code>。實際上 <code>Z_max > target.alt</code> 時不需要爬升。<br>
+            若 <code>Z_max < target.alt</code>，則先爬升到 <code>target.alt</code> 再返航。
+        </div>
+
+        <h4>🏠 Step 5：返航（與 B 相同，不下載照片）</h4>
+        <div style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            <code>missionType == "C"</code> 時跳過照片下載（只有錄影影片）。
+        </div>
+
+        <h4>📊 完整狀態流轉</h4>
+        <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;text-align:center">
+            IDLE → <span style="color:#0d904f">TAKING_OFF</span> → <span style="color:#1a73e8">FLYING_TO_TARGET</span> → <span style="color:#e37400">DESCENDING_TO_ORBIT_ALT</span> → <span style="color:#ff6d00">SPIRAL_ASCENDING</span> → <span style="color:#7c3aed">GIMBAL_PULL_UP</span> → <span style="color:#e37400">RETURNING_HOME</span> → <span style="color:#0d904f">IDLE</span>
+        </div>
+
+        <h4>🔧 C 模式獨有的程式碼邏輯</h4>
+        <table>
+            <thead><tr><th>邏輯</th><th>檔案</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr><td>垂直 P 控制器</td><td><code>OrbitModeC.kt</code></td><td><code>verticalThrottle = (climbRate × rampFactor) + (targetAlt - currentAlt) × SPIRAL_ALT_KP</code>，限速 ±5.0 m/s</td></tr>
+                <tr><td>高度目標計算</td><td><code>OrbitModeC.kt</code></td><td>迭代累積 <code>totalAngle += angularVelDeg × rampFactor × dtSec</code>（配合 ramp）</td></tr>
+                <tr><td>雲台動態調整</td><td><code>OrbitModeC.kt</code></td><td><code>gimbalPitch = -atan((h-1.7) / R)</code>（純幾何公式），時間節流 500ms</td></tr>
+                <tr><td>Ramp-up 啟動加速</td><td><code>OrbitModeC.kt</code></td><td><code>SPIRAL_RAMP_UP_DURATION_SEC = 1.5s</code>，easeInSine 從 0 平滑過渡至目標速度</td></tr>
+                <tr><td>Final Heading 弧段延伸</td><td><code>OrbitModeC.kt</code></td><td>螺旋完成後若 <code>finalHeading != null</code>，固定半徑/高度 zMax 繼續繞行至目標方位角，再進入雲台拉平</td></tr>
+                <tr><td>漸進減速 + 穩定暫停</td><td><code>OrbitModeC.kt</code></td><td><code>GIMBAL_PULL_UP_DECELERATION_SEC = 2.0s</code> ease-out 減速 + <code>GIMBAL_PULL_UP_SETTLE_PAUSE_MS = 500ms</code> 穩定後開始雲台拉平</td></tr>
+                <tr><td>參數驗證</td><td><code>MissionValidator.kt</code></td><td><code>radius ≥ SPIRAL_MIN_RADIUS(5)</code>、<code>maxAlt > 0</code>、<code>turns 3~10</code>、<code>final_heading 0~360</code></td></tr>
+                <tr><td>超時保護</td><td><code>AppConfig.kt</code></td><td><code>SPIRAL_TIMEOUT_MS = 600000L</code>（10 分鐘）</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 任務 D -->
+<div class="file-section" id="case-mission-d">
+    <div class="file-header">
+        <div class="file-icon core" style="background:#d93025">D</div>
+        <div class="file-info">
+            <h3>任務 D — 擴展螺旋上升錄影</h3>
+            <div class="desc">飛到目標 → 半徑漸增的螺旋上升 N 圈錄影（ramp-up 啟動加速、rStart→rEnd、可選 final_heading 弧段延伸 → GIMBAL_PULL_UP）→ 返航</div>
+        </div>
+        <div class="badges">
+            <span class="badge badge-red">radius ≥ 5</span>
+            <span class="badge badge-red">turns 3-10</span>
+            <span class="badge badge-red">最複雜</span>
+        </div>
+    </div>
+    <div class="file-body">
+        <h4>📥 Step 1：收到 MQTT 指令</h4>
+        <div class="diagram" style="background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;font-family:monospace;font-size:13px;line-height:1.6;overflow-x:auto;margin-bottom:16px">
+{
+    <span style="color:#9cdcfe">"mission"</span>: <span style="color:#ce9178">"D"</span>,
+    <span style="color:#9cdcfe">"target"</span>: { <span style="color:#9cdcfe">"lat"</span>: <span style="color:#b5cea8">25.0</span>, <span style="color:#9cdcfe">"lng"</span>: <span style="color:#b5cea8">121.5</span>, <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">50.0</span> },
+    <span style="color:#9cdcfe">"orbit"</span>: {
+        <span style="color:#9cdcfe">"radius"</span>: <span style="color:#b5cea8">10.0</span>,             <span style="color:#6a9955">// 起始半徑 rStart</span>
+        <span style="color:#9cdcfe">"alt"</span>: <span style="color:#b5cea8">10.0</span>,                 <span style="color:#6a9955">// 起始高度 Z_min</span>
+        <span style="color:#9cdcfe">"gimbal_pitch"</span>: <span style="color:#b5cea8">-45</span>,
+        <span style="color:#9cdcfe">"max_alt"</span>: <span style="color:#b5cea8">50.0</span>,              <span style="color:#6a9955">// 結束高度 Z_max（必填）</span>
+        <span style="color:#9cdcfe">"turns"</span>: <span style="color:#b5cea8">5</span>,                    <span style="color:#6a9955">// 旋轉圈數 3-10（必填）</span>
+        <span style="color:#9cdcfe">"radius_end"</span>: <span style="color:#b5cea8">30.0</span>,            <span style="color:#6a9955">// 結束半徑 rEnd（必填，> radius）</span>
+        <span style="color:#9cdcfe">"orbit_speed"</span>: <span style="color:#b5cea8">1.0</span>             <span style="color:#6a9955">// 速度倍率（1.0=標準）</span>
+    }
+}</div>
+        <div style="background:#fce8e6;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            <strong>⚠️ D 模式額外驗證：</strong><code>radius ≥ 5</code>、<code>maxAlt > 0</code>、<code>turns</code> 在 3~10 範圍、<code>radiusEnd > radius</code>、<code>radiusEnd ≤ 1000m</code>。任一不滿足則拒絕執行。
+        </div>
+
+        <h4>🛫 Step 2：起飛與飛行（與 A/B/C 相同）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr><td>2.1</td><td>TAKING_OFF → 起飛 → 爬升到 <code>target.alt (50m)</code></td></tr>
+                <tr><td>2.2</td><td>FLYING_TO_TARGET → 飛往目標座標</td></tr>
+                <tr><td>2.3</td><td>DESCENDING_TO_ORBIT_ALT → 下降到 <code>orbit.alt (10m)</code>（Z_min）</td></tr>
+            </tbody>
+        </table>
+
+        <h4>🌀 Step 3：擴展螺旋上升錄影（D 模式核心）</h4>
+        <table>
+            <thead><tr><th>步驟</th><th>檔案</th><th>方法</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-red">3.1</span></td>
+                    <td><code>MissionStateMachine.kt</code></td>
+                    <td><code>executeStopCore()</code></td>
+                    <td>判斷 <code>missionType == "D" && radius > 0 && maxAlt != null && turns != null && radiusEnd != null</code> → 呼叫 <code>OrbitController.executeExpandingSpiral()</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">3.2</span></td>
+                    <td><code>OrbitModeD.kt</code></td>
+                    <td><code>execute()</code></td>
+                    <td>
+                        <strong>Phase 1：</strong>設定初始雲台角度<br>
+                        <strong>Phase 2：</strong>相機設定<br>
+                        <strong>Phase 3：</strong>飛到環繞起點<br>
+                        <strong>Phase 4：</strong>視覺預選取<br>
+                        <strong>Phase 5：</strong>開始錄影
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">3.3</span></td>
+                    <td><code>OrbitModeD.kt</code></td>
+                    <td>擴展螺旋迴圈</td>
+                    <td>
+                        <strong>Ramp-up 啟動加速：</strong>首 1.5s 以 easeInSine 從 0 平滑加速至目標速度（<code>SPIRAL_RAMP_UP_DURATION_SEC</code>）<br>
+                        <strong>半徑增長：</strong><code>currentRadius = rStart + (rEnd - rStart) × progress</code><br>
+                        <strong>水平控制：</strong>切線速度 + 徑向 PD 修正 + 徑向擴展速度（切線/徑向修正合成後<strong>歸一化</strong>，擴展分量不參與，維持向外移動）<br>
+                        <strong>速度上限時間重算：</strong>幾何角度固定，總時間 = uncap 區（ω 恆定）+ cap 區（v=capSpeed、弧長 = avgRadius × Δθ）；爬升率按實際總時間推算，高度與角度同步完成<br>
+                        <strong>電池中止：</strong>每 90° 檢查電量，≤ 有效 RTH 門檻 → <code>cancelMission()</code> 明確進入 RTH<br>
+                        <strong>垂直控制：</strong>P 控制器追蹤目標高度（<code>SPIRAL_ALT_KP = 0.8</code>）<br>
+                        <strong>Yaw 控制：</strong>PI + Bearing Rate 前饋 + 視覺修正<br>
+                        <strong>雲台動態調整：</strong>時間節流 500ms<br>
+                        <strong>結束條件：</strong>角度 AND 高度雙條件達標<br>
+                        <strong>Final Heading 弧段延伸：</strong>螺旋完成後若 <code>finalHeading != null</code>，固定 rEnd 半徑/高度 zMax 繼續繞行至目標方位角，再進入雲台拉平
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">3.4</span></td>
+                    <td><code>CameraManager.kt</code></td>
+                    <td><code>stopVideoRecord()</code></td>
+                    <td>停止錄影</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">3.5</span></td>
+                    <td><code>GimbalManager.kt</code></td>
+                    <td><code>setPitchAngle(0.0)</code></td>
+                    <td>重置雲台水平</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>📈 Step 4：爬升回 target.alt</h4>
+        <div style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            螺旋結束後若 <code>currentAlt < target.alt - 0.5m</code>，先爬升到 <code>target.alt</code> 再返航。
+        </div>
+
+        <h4>🏠 Step 5：返航（不下載照片）</h4>
+        <div style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px">
+            <code>missionType == "D"</code> 時跳過照片下載（只有錄影影片）。
+        </div>
+
+        <h4>📊 完整狀態流轉</h4>
+        <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;text-align:center">
+            IDLE → <span style="color:#0d904f">TAKING_OFF</span> → <span style="color:#1a73e8">FLYING_TO_TARGET</span> → <span style="color:#e37400">DESCENDING_TO_ORBIT_ALT</span> → <span style="color:#d93025">SPIRAL_ASCENDING</span> → <span style="color:#7c3aed">GIMBAL_PULL_UP</span> → <span style="color:#e37400">RETURNING_HOME</span> → <span style="color:#0d904f">IDLE</span>
+        </div>
+
+        <h4>🔧 D 模式獨有的程式碼邏輯</h4>
+        <table>
+            <thead><tr><th>邏輯</th><th>檔案</th><th>說明</th></tr></thead>
+            <tbody>
+                <tr><td>半徑線性增長</td><td><code>OrbitModeD.kt</code></td><td><code>currentRadius = rStart + radiusGain × progress</code></td></tr>
+                <tr><td>徑向擴展速度</td><td><code>OrbitModeD.kt</code></td><td><code>expansionSpeed = expansionPerDegree × angularVelDeg</code></td></tr>
+                <tr><td>速度上限時間重算</td><td><code>OrbitModeD.kt</code></td><td>幾何角度固定；總時間 = uncap 區（ω 恆定）+ cap 區（v=capSpeed、弧長 = avgRadius × Δθ），爬升率按實際時間推算，高度與角度同步完成</td></tr>
+                <tr><td>三維度合成 + 歸一化</td><td><code>OrbitModeD.kt</code></td><td>切線 + 徑向修正合成後歸一化（擴展分量不參與，維持向外移動），抑制速度脈衝 → 錄影抖動</td></tr>
+                <tr><td>電池中止</td><td><code>OrbitModeD.kt</code></td><td>每 90° 檢查電量，≤ 有效 RTH 門檻 → <code>cancelMission()</code> 明確進入 RTH</td></tr>
+                <tr><td>Ramp-up 啟動加速</td><td><code>OrbitModeD.kt</code></td><td>同 C 模式：<code>SPIRAL_RAMP_UP_DURATION_SEC = 1.5s</code> easeInSine</td></tr>
+                <tr><td>Final Heading 弧段延伸</td><td><code>OrbitModeD.kt</code></td><td>螺旋完成後固定 rEnd 半徑/高度 zMax 繞行至 <code>finalHeading</code> 方位角</td></tr>
+                <tr><td>漸進減速 + 穩定暫停</td><td><code>OrbitModeD.kt</code></td><td>同 C 模式：<code>GIMBAL_PULL_UP_DECELERATION_SEC = 2.0s</code> 減速 + <code>GIMBAL_PULL_UP_SETTLE_PAUSE_MS = 500ms</code> 穩定後雲台拉平</td></tr>
+                <tr><td>參數驗證</td><td><code>MissionValidator.kt</code></td><td><code>radiusEnd > radius</code> 且 <code>radiusEnd ≤ MAX_MISSION_RADIUS(1000m)</code>、<code>final_heading 0~360°</code></td></tr>
+                <tr><td>超時保護</td><td><code>AppConfig.kt</code></td><td><code>SPIRAL_TIMEOUT_MS = 600000L</code>（10 分鐘）</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 四模式比較 -->
+<div class="file-section" id="mission-comparison">
+    <div class="file-header">
+        <div class="file-icon core" style="background:#333">⚖️</div>
+        <div class="file-info">
+            <h3>四模式比較總表</h3>
+            <div class="desc">任務 A / B / C / D 的關鍵差異一覽</div>
+        </div>
+    </div>
+    <div class="file-body">
+        <table>
+            <thead>
+                <tr><th>項目</th><th>A 模式</th><th>B 模式</th><th>C 模式</th><th>D 模式</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>核心方法</strong></td><td><code>executeInPlaceRotation()</code></td><td><code>executeOrbitPhase()</code></td><td><code>executeSpiralAscent()</code></td><td><code>executeExpandingSpiral()</code></td></tr>
+                <tr><td><strong>radius</strong></td><td>= 0</td><td>> 0</td><td>≥ 5</td><td>≥ 5</td></tr>
+                <tr><td><strong>必填參數</strong></td><td>target</td><td>target + radius</td><td>target + radius + max_alt + turns</td><td>target + radius + max_alt + turns + radius_end</td></tr>
+                <tr><td><strong>水平控制</strong></td><td>無（原地）</td><td>切線 + 徑向 PD（<strong>歸一化</strong>）</td><td>切線 + 徑向 PD（<strong>歸一化</strong>）</td><td>切線 + 徑向 PD + 擴展（<strong>歸一化</strong>，擴展除外）</td></tr>
+                <tr><td><strong>半徑變化</strong></td><td>—</td><td>固定</td><td>固定</td><td>線性增長</td></tr>
+                <tr><td><strong>垂直控制</strong></td><td>高度 P 穩定</td><td>無（固定高度）</td><td>P 控制器追蹤</td><td>P 控制器追蹤</td></tr>
+                <tr><td><strong>Yaw 控制</strong></td><td>固定 12°/s</td><td>PI + 前饋 + 視覺</td><td>PI + 前饋 + 視覺</td><td>PI + 前饋 + 視覺</td></tr>
+                <tr><td><strong>Bearing Rate 前饋</strong></td><td>—</td><td>✅ EMA 平滑 + 預測</td><td>✅ EMA 平滑 + 預測</td><td>✅ EMA 平滑 + 預測</td></tr>
+                <tr><td><strong>指令平滑化</strong></td><td>—</td><td>✅ EMA 低通濾波</td><td>✅ EMA 低通濾波</td><td>✅ EMA 低通濾波</td></tr>
+                <tr><td><strong>電池中止</strong></td><td>—</td><td>✅ 每 90° 檢查 → <code>cancelMission()</code> 進 RTH</td><td>✅ 每 90° 檢查 → <code>cancelMission()</code> 進 RTH</td><td>✅ 每 90° 檢查 → <code>cancelMission()</code> 進 RTH</td></tr>
+                <tr><td><strong>雲台</strong></td><td>固定角度</td><td>固定角度</td><td>動態調整 + 高度修正</td><td>動態調整 + 高度修正</td></tr>
+                <tr><td><strong>錄影</strong></td><td>✅ 原地旋轉</td><td>✅ 環繞</td><td>✅ 螺旋上升</td><td>✅ 擴展螺旋</td></tr>
+                <tr><td><strong>拍照</strong></td><td>✅ 7 張</td><td>❌</td><td>❌</td><td>❌</td></tr>
+                <tr><td><strong>下載照片</strong></td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+                <tr><td><strong>狀態</strong></td><td>RECORDING_360</td><td>ORBITING</td><td>SPIRAL_ASCENDING → GIMBAL_PULL_UP</td><td>SPIRAL_ASCENDING → GIMBAL_PULL_UP</td></tr>
+                <tr><td><strong>超時</strong></td><td>60 秒</td><td>180 秒</td><td>600 秒</td><td>600 秒</td></tr>
+            </tbody>
+        </table>
+
+        <h4>📁 各模式涉及的檔案清單</h4>
+        <table>
+            <thead><tr><th>檔案</th><th>A 模式</th><th>B 模式</th><th>C 模式</th><th>D 模式</th></tr></thead>
+            <tbody>
+                <tr><td><code>MqttClientManager.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>MqttPayloadModels.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅（額外驗證）</td></tr>
+                <tr><td><code>MqttMissionBridge.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>MissionStateMachine.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>FlightPhaseExecutor.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>OrbitController.kt</code></td><td>✅ <code>executeInPlaceRotation</code></td><td>✅ <code>executeOrbitPhase</code></td><td>✅ <code>executeSpiralAscent</code></td><td>✅ <code>executeExpandingSpiral</code></td></tr>
+                <tr><td><code>VisualYawAssist.kt</code></td><td>—</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>PhotoSequenceController.kt</code></td><td>✅</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td><code>VirtualStickController.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>CameraManager.kt</code></td><td>✅ 拍照+錄影</td><td>✅ 錄影</td><td>✅ 錄影</td><td>✅ 錄影</td></tr>
+                <tr><td><code>GimbalManager.kt</code></td><td>✅ 固定角度</td><td>✅ 固定角度</td><td>✅ 動態調整</td><td>✅ 動態調整</td></tr>
+                <tr><td><code>FlightManager.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>MediaDownloadManager.kt</code></td><td>✅ 下載 7 張</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td><code>GeoMath.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                <tr><td><code>AppConfig.kt</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ==================== 快速索引 ==================== -->
+<h2>🔍 快速索引</h2>
+
+<div class="card">
+    <h4>我要做 X，應該改哪個檔案？</h4>
+    <table>
+        <thead><tr><th>任務</th><th>主要檔案</th><th>相關檔案</th></tr></thead>
+        <tbody>
+            <tr><td>修改飛行速度</td><td><code>AppConfig.kt</code></td><td><code>FlightPhaseExecutor.kt</code>, <code>OrbitController.kt</code></td></tr>
+            <tr><td>修改環繞參數</td><td><code>AppConfig.kt</code></td><td><code>OrbitController.kt</code> → <code>OrbitModeB.kt</code></td></tr>
+            <tr><td>新增任務模式</td><td><code>MissionStateMachine.kt</code></td><td><code>OrbitController.kt</code>, <code>MqttPayloadModels.kt</code>, <code>MqttMissionBridge.kt</code></td></tr>
+            <tr><td>修改擴展螺旋參數</td><td><code>AppConfig.kt</code></td><td><code>OrbitController.kt</code>（<code>executeExpandingSpiral()</code>）→ <code>OrbitModeD.kt</code></td></tr>
+            <tr><td>修改視覺追蹤</td><td><code>VisualYawAssist.kt</code></td><td><code>OrbitController.kt</code>, <code>MissionControlActivity.kt</code></td></tr>
+            <tr><td>修改 MQTT 指令</td><td><code>MqttPayloadModels.kt</code></td><td><code>MqttMissionBridge.kt</code>, <code>MqttClientManager.kt</code></td></tr>
+            <tr><td>新增 UI 設定</td><td><code>activity_settings.xml</code></td><td><code>SettingsActivity.kt</code>, <code>AppConfig.kt</code></td></tr>
+            <tr><td>修改拍照邏輯</td><td><code>PhotoSequenceController.kt</code></td><td><code>CameraManager.kt</code></td></tr>
+            <tr><td>修改雲台控制</td><td><code>GimbalManager.kt</code></td><td><code>OrbitController.kt</code></td></tr>
+            <tr><td>修改安全監控</td><td><code>FlightManager.kt</code></td><td><code>SafetyEventLogger.kt</code>, <code>MissionStateMachine.kt</code></td></tr>
+            <tr><td>修改 GPS 計算</td><td><code>GeoMath.kt</code></td><td>—</td></tr>
+            <tr><td>修改狀態回報</td><td><code>MqttStatusReporter.kt</code></td><td><code>FlightManager.kt</code></td></tr>
+            <tr><td>修改電量預估</td><td><code>FlightPhaseExecutor.kt</code></td><td><code>AppConfig.kt</code></td></tr>
+            <tr><td>修改 MQTT 連線</td><td><code>MqttClientManager.kt</code></td><td><code>AppConfig.kt</code></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:60px;padding:20px;background:#f1f3f4;border-radius:8px;text-align:center;color:var(--text-light);font-size:13px">
+    <p>📖 DJI Mini 4 Pro 任務控制系統 — 程式碼百科全書 v4.1</p>
+    <p>最後更新：2026-08-28 | SDK: DJI MSDK v5 (5.18.0)</p>
+</div>
+
+</div><!-- /main -->
+
+<script>
+function searchFiles() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const sections = document.querySelectorAll('.file-section');
+    const navLinks = document.querySelectorAll('#sidebarNav a.file-link');
+
+    if (!query) {
+        sections.forEach(s => s.classList.remove('search-hidden'));
+        navLinks.forEach(l => l.classList.remove('search-hidden'));
+        return;
+    }
+
+    sections.forEach(section => {
+        const text = section.textContent.toLowerCase();
+        if (text.includes(query)) {
+            section.classList.remove('search-hidden');
+        } else {
+            section.classList.add('search-hidden');
+        }
+    });
+
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        const target = document.getElementById(href?.substring(1));
+        if (target && !target.classList.contains('search-hidden')) {
+            link.classList.remove('search-hidden');
+        } else {
+            link.classList.add('search-hidden');
+        }
+    });
+}
+</script>
+
+</body>
+</html>
